@@ -1,0 +1,3 @@
+# Local edge function secrets / service keys — never commit
+.env
+.env.*

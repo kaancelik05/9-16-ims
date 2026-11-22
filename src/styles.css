@@ -1,1 +1,335 @@
-/* You can add global styles to this file, and also import other style files */
+/* ── 9-16 IMP · Kinetic Executive Dark (MD3-flavored) ────────────── */
+@import "@fontsource/plus-jakarta-sans/400.css";
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "material-symbols/outlined.css";
+@import "tailwindcss";
+
+/* Design tokens — Kinetic Executive Dark */
+@theme {
+  /* Typography */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, sans-serif;
+  --font-data-mono: "Inter", ui-monospace, SFMono-Regular, monospace;
+
+  /* Type scale */
+  --text-display-lg: 40px;
+  --text-display-lg--line-height: 48px;
+  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-lg--font-weight: 700;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 36px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-md: 22px;
+  --text-headline-md--line-height: 30px;
+  --text-headline-md--letter-spacing: -0.015em;
+  --text-headline-md--font-weight: 600;
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 24px;
+  --text-headline-sm--letter-spacing: -0.01em;
+  --text-headline-sm--font-weight: 600;
+  --text-title-md: 16px;
+  --text-title-md--line-height: 22px;
+  --text-title-md--letter-spacing: -0.005em;
+  --text-title-md--font-weight: 600;
+  --text-body-lg: 15px;
+  --text-body-lg--line-height: 24px;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 18px;
+  --text-body-sm--letter-spacing: 0.005em;
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0.02em;
+  --text-label-md--font-weight: 600;
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
+  --text-label-sm--letter-spacing: 0.04em;
+  --text-label-sm--font-weight: 500;
+  --text-data-mono: 13px;
+  --text-data-mono--line-height: 18px;
+  --text-data-mono--letter-spacing: -0.01em;
+  --text-data-mono--font-weight: 500;
+
+  /* Spacing scale */
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2rem;
+  --spacing-gutter: 1.25rem;
+
+  /* Surfaces */
+  --color-surface-lowest: #0c0e11;
+  --color-surface: #111317;
+  --color-surface-low: #1a1c1f;
+  --color-surface-container: #1e2023;
+  --color-surface-high: #282a2d;
+  --color-surface-highest: #333538;
+  --color-surface-bright: #37393d;
+
+  /* Content */
+  --color-on-surface: #e2e2e6;
+  --color-on-surface-variant: #c2c6d6;
+  --color-outline: #8c909f;
+  --color-outline-variant: #424754;
+
+  /* Primary (electric blue family) */
+  --color-primary: #adc6ff;
+  --color-primary-container: #4d8eff;
+  --color-on-primary: #0c0e11;
+  --color-on-primary-container: #00285d;
+
+  /* Tertiary (safety emerald family) */
+  --color-tertiary: #4edea3;
+  --color-tertiary-container: #00a572;
+  --color-on-tertiary: #00311f;
+  --color-on-tertiary-container: #00311f;
+
+  /* Secondary (indigo family) */
+  --color-secondary: #c0c1ff;
+  --color-secondary-container: #3131c0;
+  --color-on-secondary: #1a1c5e;
+  --color-on-secondary-container: #b0b2ff;
+
+  /* Error */
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error: #680006;
+  --color-on-error-container: #ffdad6;
+
+  /* Legacy aliases (earlier components) */
+  --color-deep: #0c0e11;
+  --color-card: #1a1c1f;
+  --color-elevated: #282a2d;
+  --color-primary-strong: #4d8eff;
+  --color-safety: #4edea3;
+  --color-safety-strong: #00a572;
+  --color-alert: #ffb4ab;
+  --color-alert-strong: #dc2626;
+  --color-warning: #f59e0b;
+  --color-warning-strong: #d97706;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-surface-lowest font-sans text-body-md text-on-surface antialiased;
+    overscroll-behavior: none;
+  }
+
+  ::selection {
+    @apply bg-primary-container/40 text-white;
+  }
+
+  /* Executive dark scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.12) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.12);
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgb(255 255 255 / 0.2);
+  }
+}
+
+/* Glassmorphic panel utility */
+@utility glass {
+  background: color-mix(in srgb, var(--color-surface-low) 72%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgb(255 255 255 / 0.1);
+}
+
+/* Subtle top gradient glow used by hero/telemetry surfaces */
+@utility glow-top {
+  background-image: radial-gradient(
+    120% 60% at 50% 0%,
+    rgb(77 142 255 / 0.08),
+    transparent 70%
+  );
+}
+
+/* Standard form field */
+@utility field {
+  @apply w-full rounded-lg border border-white/10 bg-surface-lowest/60 px-3.5 py-2.5 text-body-md text-on-surface outline-none transition-colors duration-150 placeholder:text-outline focus:border-primary-container/60 focus:ring-2 focus:ring-primary-container/20;
+}
+
+/* Field label */
+@utility field-label {
+  @apply mb-1.5 block text-label-sm font-semibold uppercase tracking-widest text-outline;
+}
+
+/* Design type mapping: display & headline sizes use Plus Jakarta Sans
+   (design fontFamily map), body/label/mono sizes inherit Inter. */
+@layer utilities {
+  .text-display-lg,
+  .text-headline-lg,
+  .text-headline-md,
+  .text-headline-sm {
+    font-family: var(--font-display);
+  }
+}
+
+/* Executive range slider — Audience Reach filter control.
+   Track fill is injected inline via [style.background] gradient;
+   this class only shapes the input and its thumb. */
+.range-exec {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+
+.range-exec::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 8px rgba(77, 142, 255, 0.8);
+  transition: transform 0.15s ease;
+}
+
+.range-exec::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.range-exec::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 8px rgba(77, 142, 255, 0.8);
+}
+
+.range-exec:focus-visible {
+  box-shadow: 0 0 0 3px rgba(77, 142, 255, 0.25);
+}
+
+/* Modal form field — bordered variant used inside dialogs */
+@utility field-modal {
+  @apply h-9 w-full rounded-lg border border-outline-variant/30 bg-surface-lowest px-3 text-body-sm text-on-surface transition-all placeholder:text-outline focus:bg-surface-container focus:outline-none;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LIGHT MODE — Kinetic Executive Light
+   Applied via .light on <html>; overrides all @theme color tokens.
+   Non-color tokens (spacing, typography, fonts) are theme-agnostic.
+   ════════════════════════════════════════════════════════════════ */
+.light {
+  color-scheme: light;
+
+  /* Surfaces — inverted to a cool-gray ladder */
+  --color-surface-lowest: #f7f8fa;
+  --color-surface: #f2f3f5;
+  --color-surface-low: #eceef1;
+  --color-surface-container: #e5e7eb;
+  --color-surface-high: #d9dce2;
+  --color-surface-highest: #cdd1d8;
+  --color-surface-bright: #c4c9d1;
+
+  /* Content */
+  --color-on-surface: #1a1c1f;
+  --color-on-surface-variant: #3d4250;
+  --color-outline: #6b7080;
+  --color-outline-variant: #c3c8d4;
+
+  /* Primary (deep blue for light surfaces) */
+  --color-primary: #1a5fd4;
+  --color-primary-container: #d0e2ff;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #0d3e8c;
+
+  /* Tertiary (deep emerald) */
+  --color-tertiary: #00875a;
+  --color-tertiary-container: #b8f5dd;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #004d31;
+
+  /* Secondary (deep indigo) */
+  --color-secondary: #4f46e5;
+  --color-secondary-container: #e0e0ff;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #31317e;
+
+  /* Error */
+  --color-error: #c0333d;
+  --color-error-container: #f9d9d9;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #8c1f28;
+
+  /* Legacy aliases */
+  --color-deep: #f7f8fa;
+  --color-card: #eceef1;
+  --color-elevated: #d9dce2;
+  --color-primary-strong: #1a5fd4;
+  --color-safety: #00875a;
+  --color-safety-strong: #006b47;
+  --color-alert: #c0333d;
+  --color-alert-strong: #a0252e;
+  --color-warning: #d97706;
+  --color-warning-strong: #b45309;
+
+  /* Light scrollbar */
+  * {
+    scrollbar-color: rgb(0 0 0 / 0.15) transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: rgb(0 0 0 / 0.15);
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgb(0 0 0 / 0.25);
+  }
+}
+
+/* Light-mode adjustments for utilities that hardcode white borders/glow */
+.light .glass {
+  border-color: rgb(0 0 0 / 0.08);
+}
+
+.light ::selection {
+  background: rgb(26 95 212 / 0.15);
+  color: #1a1c1f;
+}
+
+/* Fields with white/10 borders → subtle dark border in light */
+.light .field {
+  border-color: rgb(0 0 0 / 0.1);
+}
+
+/* Slider thumb glow → blue instead of white-hot */
+.light .range-exec::-webkit-slider-thumb {
+  box-shadow: 0 0 8px rgba(26 95 212, 0.4);
+}
+.light .range-exec::-moz-range-thumb {
+  box-shadow: 0 0 8px rgba(26 95 212, 0.4);
+}

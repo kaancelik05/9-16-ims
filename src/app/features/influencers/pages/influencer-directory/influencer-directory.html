@@ -1,0 +1,662 @@
+<div class="flex w-full flex-col gap-space-lg">
+  <!-- ── Breadcrumb & header action row ──────────────────────────── -->
+  <div class="flex flex-col justify-between gap-space-md xl:flex-row xl:items-center">
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center gap-2 text-label-sm text-outline">
+        <span class="cursor-pointer transition-colors hover:text-on-surface">Directory</span>
+        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+        <span class="font-medium text-primary">Creator Roster &amp; Discovery</span>
+      </div>
+      <div class="flex flex-wrap items-baseline gap-space-sm pt-1">
+        <h1 class="text-headline-lg font-bold tracking-tight text-on-surface">
+          Influencer Directory
+        </h1>
+        <div
+          class="flex items-center gap-2 rounded-full bg-surface-high px-2.5 py-1 shadow-sm"
+        >
+          <span
+            class="h-2 w-2 rounded-full"
+            [class]="source() === 'live' ? 'bg-tertiary' : 'bg-outline'"
+          ></span>
+          <span class="font-data-mono text-label-sm font-semibold text-on-surface">
+            {{ creators().length }} Creators Registered
+          </span>
+        </div>
+        <span
+          class="rounded-full border px-2 py-0.5 font-data-mono text-[10px] font-semibold uppercase tracking-wider"
+          [class]="
+            source() === 'live'
+              ? 'border-tertiary/40 text-tertiary'
+              : 'border-outline-variant/60 text-outline'
+          "
+          [title]="source() === 'live' ? 'Roster loaded from Supabase' : 'Design-flight demo roster'"
+        >
+          {{ source() === 'live' ? 'Live DB' : 'Demo' }}
+        </span>
+        @if (syncNote()) {
+          <span class="rounded-full bg-primary-container/15 px-2.5 py-1 text-label-sm font-medium text-primary">
+            {{ syncNote() }}
+          </span>
+        }
+        <span class="hidden text-label-sm font-medium text-on-surface-variant 2xl:inline-block">
+          {{ assignedCount() }} Active in Flight <span class="mx-1 text-outline">•</span>
+          <span class="font-semibold text-tertiary">99.1% AI Vetted</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Action toolbar -->
+    <div class="flex flex-wrap items-center gap-space-sm">
+      <!-- Search -->
+      <div class="relative w-64 md:w-72">
+        <span
+          translate="no"
+          class="material-symbols-outlined notranslate absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+          >search</span
+        >
+        <input
+          #q
+          type="text"
+          [value]="search()"
+          (input)="search.set(q.value)"
+          class="h-9 w-full rounded-lg bg-surface-low pl-9 pr-8 text-body-sm text-on-surface shadow-sm transition-all placeholder:text-outline focus:bg-surface-container focus:outline-none"
+          placeholder="Filter by name, @handle, tag..."
+        />
+        <span
+          translate="no"
+          class="material-symbols-outlined notranslate absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-[16px] text-outline hover:text-on-surface"
+          >tune</span
+        >
+      </div>
+
+      <!-- Export media kit (icon-only; label in tooltip) -->
+      <button
+        type="button"
+        title="Export Media Kit (filtered roster as PDF)"
+        aria-label="Export Media Kit"
+        [disabled]="exporting()"
+        (click)="exportPdf()"
+        class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-low text-on-surface shadow-sm transition-all hover:bg-surface-container disabled:opacity-40"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[18px] text-outline">file_download</span>
+      </button>
+
+      <!-- View switcher -->
+      <div class="flex items-center rounded-lg bg-surface-low p-0.5 shadow-sm">
+        <button
+          type="button"
+          title="Grid View"
+          (click)="viewMode.set('grid')"
+          class="rounded-md p-1.5 transition-all"
+          [class]="
+            viewMode() === 'grid'
+              ? 'bg-surface-high text-primary shadow-sm'
+              : 'text-outline hover:bg-surface-container hover:text-on-surface'
+          "
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px]">grid_view</span>
+        </button>
+        <button
+          type="button"
+          title="Table View"
+          (click)="viewMode.set('table')"
+          class="rounded-md p-1.5 transition-all"
+          [class]="
+            viewMode() === 'table'
+              ? 'bg-surface-high text-primary shadow-sm'
+              : 'text-outline hover:bg-surface-container hover:text-on-surface'
+          "
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px]">view_list</span>
+        </button>
+      </div>
+
+      <!-- Add Influencer CTA -->
+      <button
+        type="button"
+        (click)="showModal.set(true)"
+        class="flex h-9 items-center gap-1.5 rounded-lg bg-primary-container px-4 text-label-md font-semibold text-on-primary-container shadow-sm transition-all hover:bg-primary hover:text-on-primary"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[18px]">person_add</span>
+        <span>Add Influencer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Advanced multi-parameter filter console ─────────────────── -->
+  <div class="flex flex-col gap-space-md rounded-xl bg-surface-low p-space-md shadow-sm md:p-space-lg">
+    <div class="grid grid-cols-1 items-end gap-space-md md:grid-cols-2 lg:grid-cols-6">
+      <!-- Creator niche -->
+      <div class="flex flex-col gap-1.5">
+        <label
+          class="flex items-center gap-1 text-label-sm font-semibold uppercase tracking-wider text-outline"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[14px]">category</span>
+          Creator Niche
+        </label>
+        <div class="relative">
+          <select
+            #nicheSel
+            class="h-9 w-full cursor-pointer appearance-none rounded-lg bg-surface-lowest px-3 pr-8 text-body-sm text-on-surface shadow-sm focus:bg-surface-container focus:outline-none"
+            [value]="niche()"
+            (change)="niche.set(nicheSel.value)"
+          >
+            @for (option of nicheOptions; track option) {
+              <option [value]="option" [selected]="option === niche()">{{ option }}</option>
+            }
+          </select>
+          <span
+            translate="no"
+            class="material-symbols-outlined notranslate pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+            >expand_more</span
+          >
+        </div>
+      </div>
+
+      <!-- Platform pills (double column so 4 pills breathe) -->
+      <div class="flex flex-col gap-1.5 md:col-span-2 lg:col-span-2">
+        <label
+          class="flex items-center gap-1 text-label-sm font-semibold uppercase tracking-wider text-outline"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[14px]">hub</span>
+          Active Platforms
+        </label>
+        <div class="flex h-9 min-w-0 items-center gap-1.5">
+          @for (pill of platformPills; track pill.key) {
+            <button
+              type="button"
+              [title]="pill.code + ' Filtered'"
+              (click)="togglePlatform(pill.key)"
+              class="flex h-full min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-2 text-label-sm shadow-sm transition-colors"
+              [class]="
+                isPlatformActive(pill.key)
+                  ? 'bg-surface-high font-semibold text-primary'
+                  : 'bg-surface-lowest text-outline hover:text-on-surface'
+              "
+            >
+              <app-brand-logo [platform]="pill.key" [size]="13" />
+              <span>{{ pill.code }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Audience reach slider -->
+      <div class="flex min-w-0 flex-col gap-1.5">
+        <label
+          for="reach-range"
+          class="flex items-center gap-1 text-label-sm font-semibold uppercase tracking-wider text-outline"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[14px]">groups</span>
+          Audience Reach
+        </label>
+        <div class="flex h-9 items-center gap-2 rounded-lg bg-surface-lowest px-3 shadow-sm">
+          <span class="font-data-mono text-[10px] font-medium text-primary whitespace-nowrap">
+            ≥ {{ reachLabel() }}
+          </span>
+          <input
+            #reach
+            id="reach-range"
+            type="range"
+            class="range-exec min-w-0 flex-1"
+            min="0"
+            max="4"
+            step="1"
+            [value]="reachStep()"
+            [style.background]="sliderBackground()"
+            (input)="setReach(reach.value)"
+            [attr.aria-label]="'Minimum audience reach ' + reachLabel()"
+          />
+          <span class="font-data-mono text-[10px] text-outline whitespace-nowrap">5M+</span>
+        </div>
+      </div>
+
+      <!-- Engagement threshold -->
+      <div class="flex flex-col gap-1.5">
+        <label
+          class="flex items-center gap-1 text-label-sm font-semibold uppercase tracking-wider text-outline"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[14px]">trending_up</span>
+          Engagement Rate
+        </label>
+        <div class="relative">
+          <select
+            #erSel
+            class="h-9 w-full cursor-pointer appearance-none rounded-lg bg-surface-lowest px-3 pr-8 text-body-sm text-on-surface shadow-sm focus:bg-surface-container focus:outline-none"
+            (change)="setEr(erSel.value)"
+          >
+            @for (option of erOptions; track option.value) {
+              <option [value]="option.value" [selected]="option.value === erMin()">
+                {{ option.label }}
+              </option>
+            }
+          </select>
+          <span
+            translate="no"
+            class="material-symbols-outlined notranslate pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+            >expand_more</span
+          >
+        </div>
+      </div>
+
+      <!-- Asana state -->
+      <div class="flex flex-col gap-1.5">
+        <label
+          class="flex items-center gap-1 text-label-sm font-semibold uppercase tracking-wider text-outline"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[14px] text-tertiary">sync_alt</span>
+          Asana State
+        </label>
+        <div class="relative">
+          <select
+            #stateSel
+            class="h-9 w-full cursor-pointer appearance-none rounded-lg bg-surface-lowest px-3 pr-8 text-body-sm text-on-surface shadow-sm focus:bg-surface-container focus:outline-none"
+            [value]="asanaState()"
+            (change)="asanaState.set(stateSel.value)"
+          >
+            @for (option of asanaOptions; track option) {
+              <option [value]="option" [selected]="option === asanaState()">{{ option }}</option>
+            }
+          </select>
+          <span
+            translate="no"
+            class="material-symbols-outlined notranslate pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+            >expand_more</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Active filter tags ribbon -->
+    <div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-label-sm uppercase tracking-wider text-outline">Active:</span>
+
+        @if (erMin() > 0) {
+          <span
+            class="inline-flex items-center gap-1 rounded-md bg-surface-high px-2.5 py-1 text-label-sm text-on-surface shadow-sm"
+          >
+            <span>{{ currentErLabel() }}</span>
+            <button
+              type="button"
+              (click)="erMin.set(0)"
+              class="cursor-pointer text-outline hover:text-on-surface"
+            >
+              <span translate="no" class="material-symbols-outlined notranslate text-[14px]">close</span>
+            </button>
+          </span>
+        }
+        @if (showTierTag()) {
+          <span
+            class="inline-flex items-center gap-1 rounded-md bg-surface-high px-2.5 py-1 text-label-sm text-on-surface shadow-sm"
+          >
+            <span>{{ tierTagLabel() }}</span>
+            <button
+              type="button"
+              (click)="showTierTag.set(false); reachStep.set(0)"
+              class="cursor-pointer text-outline hover:text-on-surface"
+            >
+              <span translate="no" class="material-symbols-outlined notranslate text-[14px]">close</span>
+            </button>
+          </span>
+        }
+        @if (showSafetyTag()) {
+          <span
+            class="inline-flex items-center gap-1 rounded-md bg-surface-high px-2.5 py-1 text-label-sm text-on-surface shadow-sm"
+          >
+            <span>Safety &gt; 94%</span>
+            <button
+              type="button"
+              (click)="showSafetyTag.set(false)"
+              class="cursor-pointer text-outline hover:text-on-surface"
+            >
+              <span translate="no" class="material-symbols-outlined notranslate text-[14px]">close</span>
+            </button>
+          </span>
+        }
+        <button
+          type="button"
+          (click)="resetAll()"
+          class="ml-1 text-label-sm text-outline underline underline-offset-4 transition-colors hover:text-primary"
+        >
+          Reset All
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="flex items-center gap-1 text-label-sm text-outline transition-colors hover:text-on-surface"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px]">bookmark_add</span>
+          <span>Save Filter Preset</span>
+        </button>
+        <span class="text-outline">•</span>
+        <span class="font-data-mono text-label-sm text-tertiary">
+          Found {{ filtered().length }} matching creators
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Creator roster: bento grid or table view ─────────────────── -->
+  @if (viewMode() === 'grid') {
+    <div class="grid grid-cols-1 gap-space-md md:grid-cols-2 xl:grid-cols-4">
+      @for (c of paged(); track c.id) {
+      <div
+        class="group relative flex flex-col justify-between gap-space-md overflow-hidden rounded-xl bg-surface-low p-space-md shadow-md transition-all hover:bg-surface-container"
+      >
+        <!-- Decorative glow ring on hover -->
+        <div
+          class="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full blur-xl transition-all"
+          [class]="c.glow"
+        ></div>
+
+        <div class="flex flex-col gap-space-sm">
+          <!-- Avatar + identity + safety pill -->
+          <div class="flex items-start justify-between gap-space-sm">
+            <div class="flex min-w-0 items-center gap-space-sm">
+              <div class="relative shrink-0">
+                @if (failedAvatars().has(c.id) || !c.image) {
+                  <div
+                    class="grid h-[52px] w-[52px] place-items-center rounded-xl bg-gradient-to-br from-primary-container to-[#3b82f6] text-label-md font-bold text-white shadow-sm"
+                  >
+                    {{ initials(c.name) }}
+                  </div>
+                } @else {
+                  <img
+                    [src]="c.image"
+                    [alt]="c.name"
+                    (error)="onAvatarError(c.id)"
+                    class="h-[52px] w-[52px] rounded-xl object-cover shadow-sm"
+                  />
+                }
+                <span
+                  class="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-tertiary shadow-[0_0_6px_rgba(78,222,163,0.8)]"
+                  title="Active Real-Time"
+                ></span>
+              </div>
+              <div class="flex min-w-0 flex-col">
+                <div class="flex items-center gap-1">
+                  <h2
+                    class="truncate text-title-md font-bold text-on-surface transition-colors group-hover:text-primary"
+                  >
+                    {{ c.name }}
+                  </h2>
+                  <span
+                    translate="no"
+                    class="material-symbols-outlined notranslate shrink-0 text-[16px] text-primary"
+                    title="9:16 Verified Partner"
+                    >verified</span
+                  >
+                </div>
+                <span class="truncate font-data-mono text-label-sm text-outline">
+                  {{ c.handle }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Niche badges -->
+          <div class="flex flex-wrap items-center gap-1.5 pt-1">
+            <span
+              class="rounded bg-surface-high px-2 py-0.5 text-label-sm font-medium text-on-surface"
+            >
+              {{ c.niche }}
+            </span>
+            <span
+              class="rounded bg-surface-high px-2 py-0.5 text-label-sm text-on-surface-variant"
+            >
+              {{ c.nicheTag }}
+            </span>
+          </div>
+
+          <!-- Multi-channel telemetry grid -->
+          <div class="grid grid-cols-4 gap-1.5 rounded-lg bg-surface-lowest p-2">
+            @for (m of c.metrics; track m.platform) {
+              <div
+                class="flex flex-col items-center justify-center rounded bg-surface-low p-1"
+              >
+                <app-brand-logo [platform]="$any(m.platform)" [size]="14" />
+                <span class="font-data-mono text-body-sm font-bold text-on-surface">
+                  {{ m.followers }}
+                </span>
+                <span class="text-[10px]" [class]="m.subClass">{{ m.sub }}</span>
+                @if (m.source) {
+                  <span
+                    class="font-data-mono text-[8px] uppercase tracking-wide text-outline"
+                    [title]="'Metric source: ' + m.source"
+                  >
+                    {{ m.source }}
+                  </span>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Asana live sync badge -->
+          <div class="flex items-center justify-between rounded-lg bg-surface-high p-2 shadow-sm">
+            @if (c.assigned) {
+              <div class="flex min-w-0 items-center gap-1.5">
+                <span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-tertiary"></span>
+                <span class="truncate text-body-sm font-medium text-on-surface">{{ c.campaign }}</span>
+              </div>
+              <span
+                class="shrink-0 rounded bg-surface-container px-1.5 py-0.5 font-data-mono text-label-sm text-primary"
+              >
+                {{ c.asn }}
+              </span>
+            } @else {
+              <div class="flex min-w-0 items-center gap-1.5">
+                <span
+                  translate="no"
+                  class="material-symbols-outlined notranslate shrink-0 text-[16px] text-tertiary"
+                  >bolt</span
+                >
+                <span class="truncate text-body-sm font-medium text-on-surface">
+                  Available for Booking
+                </span>
+              </div>
+              <span
+                class="shrink-0 rounded bg-tertiary-container/20 px-1.5 py-0.5 text-label-sm font-semibold uppercase text-tertiary"
+              >
+                Open
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Action bar -->
+        <div class="flex items-center gap-1.5 pt-space-xs">
+          <a
+            [routerLink]="['/influencers', c.id]"
+            class="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-primary-container text-label-sm font-semibold text-on-primary-container transition-all hover:bg-primary hover:text-on-primary"
+          >
+            <span>View Profile</span>
+            <span translate="no" class="material-symbols-outlined notranslate text-[14px]">arrow_forward</span>
+          </a>
+          <button
+            type="button"
+            title="Add to Active Asana Campaign"
+            [disabled]="busyCreator() === c.id"
+            (click)="addToAsana(c)"
+            class="flex h-8 items-center rounded-lg bg-surface-high px-2.5 text-on-surface transition-all hover:bg-surface-bright disabled:opacity-40"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-primary">playlist_add</span>
+          </button>
+          <button
+            type="button"
+            [title]="'Audit: ' + c.audit"
+            class="flex h-8 items-center rounded-lg bg-surface-high px-2 text-tertiary transition-all hover:bg-surface-bright"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[16px]">verified_user</span>
+          </button>
+        </div>
+      </div>
+    } @empty {
+      <div
+        class="col-span-full flex flex-col items-center gap-2 rounded-xl bg-surface-low p-space-lg text-center"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[28px] text-outline">person_search</span>
+        <p class="text-title-md text-on-surface">No matching creators</p>
+        <p class="text-body-sm text-outline">
+          Try widening the filter parameters or resetting the console.
+        </p>
+        <button
+          type="button"
+          (click)="resetAll()"
+          class="mt-1 text-label-md text-primary underline underline-offset-4"
+        >
+          Reset All
+        </button>
+      </div>
+    }
+    </div>
+  } @else {
+    <!-- ── Table roster view ──────────────────────────────────────── -->
+    <div class="overflow-x-auto rounded-xl border border-outline-variant/30 bg-surface-low shadow-sm">
+      <table class="w-full border-collapse text-left">
+        <thead>
+          <tr class="border-b border-outline-variant/30 text-label-sm uppercase tracking-wider text-outline">
+            <th class="px-4 py-3 font-medium">Creator</th>
+            <th class="px-4 py-3 font-medium">Niche</th>
+            <th class="px-4 py-3 font-medium">Platforms</th>
+            <th class="px-4 py-3 font-medium">Peak ER</th>
+            <th class="px-4 py-3 font-medium">Reach</th>
+            <th class="px-4 py-3 font-medium">Campaign</th>
+            <th class="px-4 py-3 font-medium">Audit</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="text-body-sm">
+          @for (c of paged(); track c.id) {
+            <tr class="border-b border-outline-variant/15 transition-colors last:border-0 hover:bg-surface-container/60">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2.5">
+                  @if (c.image && !failedAvatars().has(c.id)) {
+                    <img
+                      [src]="c.image"
+                      [alt]="c.name"
+                      (error)="onAvatarError(c.id)"
+                      class="h-9 w-9 rounded-full object-cover"
+                    />
+                  } @else {
+                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary-container/40 to-primary/20 text-label-sm font-bold text-on-surface">
+                      {{ initials(c.name) }}
+                    </span>
+                  }
+                  <div class="flex min-w-0 flex-col">
+                    <span class="truncate font-semibold text-on-surface">{{ c.name }}</span>
+                    <span class="truncate font-data-mono text-label-sm text-outline">{{ c.handle }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="rounded-full bg-surface-highest px-2 py-0.5 text-label-sm text-on-surface-variant">{{ c.chip }}</span>
+              </td>
+              <td class="px-4 py-3 font-data-mono text-label-sm text-on-surface-variant">
+                {{ c.metrics.map(m => m.code + ' ' + m.followers).join(' · ') }}
+              </td>
+              <td class="px-4 py-3 font-data-mono text-on-surface">
+                {{ c.maxEr > 0 ? c.maxEr + '%' : '—' }}
+              </td>
+              <td class="px-4 py-3 font-data-mono text-on-surface">{{ compactReach(c) }}</td>
+              <td class="px-4 py-3">
+                <span class="text-on-surface-variant">{{ c.campaign ?? '—' }}</span>
+                @if (c.asn) {
+                  <span class="ml-1 font-data-mono text-label-sm text-outline">{{ c.asn }}</span>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="rounded-full px-2 py-0.5 font-data-mono text-label-sm font-semibold"
+                  [class]="
+                    c.auditFlag === 'red' ? 'bg-error/15 text-error'
+                    : c.auditFlag === 'queued' ? 'bg-surface-highest text-outline'
+                    : 'bg-tertiary-container/20 text-tertiary'
+                  "
+                >
+                  {{ c.audit }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <a
+                  [routerLink]="['/influencers', c.id]"
+                  class="inline-flex items-center gap-1 rounded-lg bg-surface-high px-2.5 py-1.5 text-label-sm font-semibold text-on-surface transition-all hover:bg-surface-bright hover:text-primary"
+                >
+                  View
+                  <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+                </a>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="px-4 py-10 text-center text-outline">
+                No matching creators — try widening the filters.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ── Pagination footer ─────────────────────────────────────────── -->
+  <div class="flex flex-wrap items-center justify-between gap-space-md rounded-xl bg-surface-low p-space-md shadow-sm">
+    <span class="text-label-sm text-outline">
+      Showing
+      <span class="font-data-mono font-semibold text-on-surface">{{ pageStart() }} – {{ pageEnd() }}</span>
+      of
+      <span class="font-data-mono font-semibold text-on-surface">{{ filtered().length }}</span>
+      creators
+    </span>
+
+    @if (totalPages() > 1) {
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          [disabled]="page() <= 1"
+          (click)="goToPage(page() - 1)"
+          aria-label="Previous page"
+          class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container text-outline transition-all hover:bg-surface-high hover:text-on-surface disabled:opacity-30 disabled:hover:bg-surface-container"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px]">chevron_left</span>
+        </button>
+        @for (item of pageWindow(); track $index) {
+          @if (item.page === null) {
+            <span class="px-1 font-data-mono text-label-sm text-outline">{{ item.label }}</span>
+          } @else {
+            <button
+              type="button"
+              (click)="goToPage(item.page)"
+              class="flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 font-data-mono text-label-sm transition-all"
+              [class]="
+                item.page === page()
+                  ? 'bg-primary-container font-bold text-on-primary-container shadow-sm'
+                  : 'bg-surface-container text-on-surface hover:bg-surface-high'
+              "
+            >
+              {{ item.label }}
+            </button>
+          }
+        }
+        <button
+          type="button"
+          [disabled]="page() >= totalPages()"
+          (click)="goToPage(page() + 1)"
+          aria-label="Next page"
+          class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container text-outline transition-all hover:bg-surface-high hover:text-on-surface disabled:opacity-30 disabled:hover:bg-surface-container"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px]">chevron_right</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ── Module 2: Add Influencer modal ──────────────────────────────── -->
+<app-add-influencer-modal
+  [open]="showModal()"
+  (closed)="showModal.set(false)"
+  (registered)="onRegistered($event)"
+/>

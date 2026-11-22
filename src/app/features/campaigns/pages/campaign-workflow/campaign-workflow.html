@@ -1,0 +1,676 @@
+<div class="flex w-full flex-col gap-space-lg">
+  <!-- ── Header & Asana sync engine telemetry ───────────────────── -->
+  <div class="flex flex-col gap-space-md">
+    <!-- Breadcrumb & operational indicators -->
+    <div class="flex flex-wrap items-center justify-between gap-space-md">
+      <div class="flex flex-wrap items-center gap-2 text-label-sm text-outline">
+        <span class="cursor-pointer transition-colors hover:text-primary">Campaign Management</span>
+        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+        <span class="cursor-pointer text-on-surface transition-colors hover:text-primary">
+          Summer Hype '25
+        </span>
+        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+        <span class="font-data-mono font-semibold text-primary">
+          Asana Sync Pipeline &amp; Delivery Board
+        </span>
+      </div>
+
+      <div class="flex items-center gap-space-sm">
+        <div class="flex items-center gap-2 rounded-full bg-surface-high px-3 py-1.5 shadow-sm">
+          <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-tertiary opacity-75"></span>
+            <span class="relative inline-flex h-2 w-2 rounded-full bg-tertiary"></span>
+          </span>
+          <span class="text-label-sm font-semibold text-on-surface">
+            Asana Engine: Bidirectional WebSocket Connected
+          </span>
+        </div>
+        <div
+          class="hidden items-center gap-1.5 rounded-full bg-surface-container px-3 py-1.5 text-label-sm text-outline md:flex"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[15px] text-tertiary">sensors</span>
+          <span>
+            Last synced: <strong class="font-data-mono text-on-surface">2 mins ago</strong>
+          </span>
+          <span class="mx-1">•</span>
+          <span>18 Webhooks Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Title bar & primary actions -->
+    <div class="flex flex-col gap-space-md pb-space-xs lg:flex-row lg:items-center lg:justify-between">
+      <div class="flex flex-col">
+        <h1 class="text-headline-lg tracking-tight text-on-surface">
+          Campaign Workflow
+        </h1>
+        <p class="text-body-md text-on-surface-variant">
+          Bidirectional multi-stage orchestration with agency Asana workspace
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-space-sm">
+        <button
+          type="button"
+          (click)="forceSync()"
+          [disabled]="syncState() !== 'idle'"
+          class="flex items-center gap-2 rounded-lg bg-primary-container px-4 py-2 text-label-md text-on-primary-container shadow-md transition-all hover:bg-primary hover:text-on-primary active:scale-95 disabled:pointer-events-none disabled:opacity-75"
+        >
+          <span
+            translate="no"
+            class="material-symbols-outlined notranslate text-[18px] transition-transform"
+            [class.animate-spin]="syncState() === 'syncing'"
+            >sync</span
+          >
+          <span>{{
+            syncState() === 'syncing' ? 'Syncing Workspace...' : syncState() === 'synced' ? 'Synced with Asana!' : 'Force Sync Asana'
+          }}</span>
+        </button>
+        <a
+          href="https://app.asana.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-2 rounded-lg bg-surface-high px-3.5 py-2 text-label-md text-on-surface shadow-sm transition-all hover:bg-surface-bright hover:text-primary"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px] text-[#F06A6A]">hub</span>
+          <span>Open Asana Project Board</span>
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-outline">open_in_new</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Filters, view switcher & search -->
+    <div class="flex flex-wrap items-center justify-between gap-space-md rounded-xl bg-surface-low p-space-sm">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="inline-flex rounded-lg bg-surface-lowest p-1">
+          @for (mode of viewModes; track mode.key) {
+            <button
+              type="button"
+              (click)="viewMode.set(mode.key)"
+              class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-label-sm transition-all"
+              [class]="
+                viewMode() === mode.key
+                  ? 'bg-surface-high font-semibold text-primary shadow-sm'
+                  : 'text-outline hover:text-on-surface'
+              "
+            >
+              <span translate="no" class="material-symbols-outlined notranslate text-[16px]">{{ mode.icon }}</span>
+              {{ mode.label }}
+            </button>
+          }
+        </div>
+        <div class="relative w-64">
+          <span
+            translate="no"
+            class="material-symbols-outlined notranslate absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-outline"
+            >search</span
+          >
+          <input
+            #q
+            type="text"
+            [value]="search()"
+            (input)="search.set(q.value)"
+            class="h-8 w-full rounded-lg bg-surface-lowest pl-8 pr-3 text-body-sm text-on-surface transition-all placeholder:text-outline focus:bg-surface-container focus:outline-none"
+            placeholder="Filter tasks or creators..."
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Asana integration notice banner ────────────────────────── -->
+  <div class="relative overflow-hidden rounded-xl bg-surface-low p-space-md shadow-md">
+    <div class="absolute bottom-0 left-0 top-0 w-1.5 bg-[#F06A6A]"></div>
+    <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#F06A6A]/5 blur-3xl"></div>
+
+    <div class="relative z-10 flex flex-col items-start justify-between gap-space-md pl-2 lg:flex-row lg:items-center">
+      <div class="flex max-w-3xl items-start gap-3.5">
+        <div class="flex shrink-0 items-center justify-center rounded-xl bg-[#F06A6A]/10 p-2.5 text-[#F06A6A]">
+          <svg class="h-6 w-6 fill-current" viewBox="0 0 24 24">
+            <circle cx="12" cy="7" r="3.2"></circle>
+            <circle cx="6.5" cy="16.5" r="3.2"></circle>
+            <circle cx="17.5" cy="16.5" r="3.2"></circle>
+          </svg>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-title-md font-bold tracking-tight text-on-surface">
+              Asana Enterprise Pipeline {{ source() === 'live' ? '· Live Mirror (read-only)' : '(Demo Board)' }}
+            </h2>
+            <span class="rounded-full bg-[#F06A6A]/15 px-2 py-0.5 font-data-mono text-label-sm font-semibold text-[#F06A6A]">
+              {{ telemetry().projectLabel }}
+            </span>
+            @if (source() === 'live' && telemetry().projectGid) {
+              @if (telemetry().webhookId) {
+                <span class="flex items-center gap-1 rounded-full bg-tertiary-container/20 px-2 py-0.5 font-data-mono text-label-sm font-semibold text-tertiary" title="Inbound Asana webhook active (HMAC verified)">
+                  <span class="h-1.5 w-1.5 rounded-full bg-tertiary"></span>
+                  Webhook Live
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  [disabled]="busyTask() !== null"
+                  (click)="connectWebhook()"
+                  class="rounded-full border border-[#F06A6A]/40 px-2 py-0.5 font-data-mono text-label-sm font-semibold text-[#F06A6A] transition-all hover:bg-[#F06A6A]/10 disabled:opacity-40"
+                  title="Subscribe to this project's task events (inbound sync)"
+                >
+                  + Connect Webhook
+                </button>
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Live pipeline telemetry -->
+      <div class="grid w-full flex-shrink-0 grid-cols-2 gap-3 sm:grid-cols-4 lg:w-auto">
+        <div class="flex flex-col rounded-lg bg-surface-lowest p-2.5">
+          <span class="text-label-sm font-semibold uppercase text-outline">Synced Tasks</span>
+          <span class="text-headline-sm font-data-mono font-bold text-on-surface"
+            >{{ telemetry().syncedTasks }} / {{ telemetry().totalTasks }}</span
+          >
+        </div>
+        <div class="flex flex-col rounded-lg bg-surface-lowest p-2.5">
+          <span class="text-label-sm font-semibold uppercase text-outline">Sync Conflicts</span>
+          <span class="text-headline-sm font-data-mono font-bold text-tertiary"
+            >{{ telemetry().conflicts }} {{ telemetry().conflicts === 0 ? 'Clean' : 'Review' }}</span
+          >
+        </div>
+        <div class="flex flex-col rounded-lg bg-surface-lowest p-2.5">
+          <span class="text-label-sm font-semibold uppercase text-outline">Avg Latency</span>
+          <span class="text-headline-sm font-data-mono font-bold text-primary"
+            >{{ telemetry().latencyMs ?? '—' }}ms</span
+          >
+        </div>
+        <div class="flex flex-col rounded-lg bg-surface-lowest p-2.5">
+          <span class="text-label-sm font-semibold uppercase text-outline">Poll Interval</span>
+          <span class="text-headline-sm font-data-mono font-bold text-on-surface">60s Auto</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Kanban pipeline (5 columns) ────────────────────────────── -->
+  <div class="w-full overflow-x-auto pb-6">
+    <div class="inline-flex min-w-full items-start gap-space-md">
+      @for (stage of filteredStages(); track stage.key) {
+        <div class="flex w-80 flex-shrink-0 flex-col gap-space-sm rounded-xl bg-surface-lowest p-space-sm shadow-sm">
+          <!-- Column header (stage / creator / deliverable modes) -->
+          <div class="flex items-center justify-between rounded-lg bg-surface-low p-2">
+            <div class="flex min-w-0 items-center gap-2">
+              @if (stage.image && !failedAvatars().has(stage.key)) {
+                <img
+                  [src]="stage.image"
+                  [alt]="stage.label"
+                  (error)="onAvatarError(stage.key)"
+                  class="h-5 w-5 shrink-0 rounded-full object-cover"
+                />
+              } @else {
+                <span class="h-2 w-2 shrink-0 rounded-full" [class]="stage.dot"></span>
+              }
+              <span class="truncate text-title-md font-semibold text-on-surface">{{ stage.label }}</span>
+              <span class="rounded bg-surface-container px-1.5 py-0.5 font-data-mono text-label-sm font-semibold text-primary">
+                {{ stage.count }}
+              </span>
+            </div>
+            @if (viewMode() === 'stage') {
+              <span
+                class="font-data-mono text-label-sm uppercase tracking-wider text-outline"
+                title="Stage is managed in Asana — this board is a read-only mirror"
+              >
+                Asana
+              </span>
+            }
+          </div>
+          @if (stage.capLabel) {
+            <div class="flex items-center justify-between px-2 text-label-sm text-outline">
+              <span>{{ stage.capLabel }}</span>
+              <span class="font-data-mono font-medium text-on-surface">{{ stage.capValue }}</span>
+            </div>
+          }
+
+          @for (t of stage.tasks; track t.id) {
+            <div
+              class="group flex cursor-pointer flex-col gap-3 rounded-xl bg-surface-low p-space-md shadow-md transition-all hover:bg-surface-container"
+            >
+              <!-- ASN + priority -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5 rounded bg-[#F06A6A]/15 px-2 py-0.5 font-data-mono text-label-sm font-semibold text-[#F06A6A]">
+                  <span class="h-1.5 w-1.5 rounded-full bg-[#F06A6A]"></span>
+                  <span>{{ t.asn }}</span>
+                </div>
+                <span class="rounded px-2 py-0.5 text-label-sm" [class]="t.priority.cls">
+                  {{ t.priority.label }}
+                </span>
+              </div>
+
+              <!-- Creator -->
+              <div class="flex items-center gap-2.5">
+                @if (failedAvatars().has(t.id) || !t.creator.image) {
+                  <div
+                    class="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-primary-container to-[#3b82f6] text-label-sm font-bold text-white shadow-sm"
+                  >
+                    {{ initials(t.creator.name) }}
+                  </div>
+                } @else {
+                  <img
+                    [src]="t.creator.image"
+                    [alt]="t.creator.name"
+                    (error)="onAvatarError(t.id)"
+                    class="h-9 w-9 rounded-full object-cover shadow-sm"
+                  />
+                }
+                <div class="flex min-w-0 flex-col">
+                  <span class="truncate text-body-md font-bold text-on-surface">{{ t.creator.name }}</span>
+                  <span class="truncate text-label-sm text-outline">{{ t.creator.handle }}</span>
+                </div>
+              </div>
+
+              <!-- Title & format -->
+              <div class="flex flex-col gap-1.5">
+                <p class="line-clamp-2 text-body-sm font-semibold text-on-surface">{{ t.title }}</p>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="flex items-center gap-1 rounded bg-surface-highest px-2 py-0.5 font-data-mono text-label-sm text-secondary"
+                  >
+                    @if (t.format.brand) {
+                      <app-brand-logo [platform]="t.format.brand" [size]="13" />
+                    } @else {
+                      <span class="h-1.5 w-1.5 rounded-full" [class]="t.format.dot"></span>
+                    }
+                    {{ t.format.label }}
+                  </span>
+                  <span class="font-data-mono text-label-sm font-semibold text-tertiary">{{ t.fee }}</span>
+                </div>
+              </div>
+
+              <!-- Middle: note -->
+              @if (t.note) {
+                <div
+                  class="flex items-center justify-between rounded bg-surface-lowest p-2 text-label-sm text-outline"
+                >
+                  <span class="truncate" [class]="t.note.textCls">{{ t.note.text }}</span>
+                  <span class="flex items-center gap-1">
+                    @if (t.note.right) {
+                      <span class="font-data-mono text-[10px]">{{ t.note.right }}</span>
+                    }
+                    <span translate="no" class="material-symbols-outlined notranslate text-[16px]" [class]="t.note.iconCls">
+                      {{ t.note.icon }}
+                    </span>
+                  </span>
+                </div>
+              }
+
+              <!-- Middle: DocuSign progress -->
+              @if (t.docusign) {
+                <div class="flex flex-col gap-1 rounded bg-surface-lowest p-2 text-label-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-1 font-semibold text-error">
+                      <span translate="no" class="material-symbols-outlined notranslate text-[15px]">timer</span>
+                      {{ t.docusign.due }}
+                    </span>
+                    <span class="font-data-mono font-semibold text-primary">DocuSign {{ t.docusign.pct }}%</span>
+                  </div>
+                  <div class="h-1 w-full overflow-hidden rounded-full bg-surface-high">
+                    <div class="h-full rounded-full bg-primary-container" [style.width.%]="t.docusign.pct"></div>
+                  </div>
+                </div>
+              }
+
+              <!-- Middle: video draft asset -->
+              @if (t.asset) {
+                <div class="flex items-center justify-between rounded-lg bg-surface-lowest p-2">
+                  <div class="flex items-center gap-2">
+                    <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-primary">movie</span>
+                    <div class="flex flex-col">
+                      <span class="truncate font-data-mono text-label-sm font-semibold text-on-surface">
+                        {{ t.asset.file }}
+                      </span>
+                      <span class="flex items-center gap-1 text-label-sm text-[#F59E0B]">
+                        <span class="h-1.5 w-1.5 rounded-full bg-[#F59E0B]"></span>
+                        {{ t.asset.status }}
+                      </span>
+                    </div>
+                  </div>
+                  <span class="rounded bg-surface-container px-1.5 py-0.5 font-data-mono text-[10px] text-outline">
+                    {{ t.asset.size }}
+                  </span>
+                </div>
+              }
+
+              <!-- Middle: live telemetry sparkline -->
+              @if (t.live) {
+                <div class="flex flex-col gap-1.5 rounded-lg bg-surface-lowest p-2.5">
+                  <div class="flex items-center justify-between text-label-sm text-outline">
+                    <span class="font-data-mono font-semibold text-on-surface">{{ t.live.views }}</span>
+                    <span class="font-data-mono font-medium text-tertiary">{{ t.live.vel }}</span>
+                  </div>
+                  <div class="flex h-5 w-full items-end gap-1">
+                    @for (bar of t.live.bars; track $index) {
+                      <div
+                        class="flex-1 rounded-t"
+                        [class]="bar.cls"
+                        [style.height.rem]="bar.h * 0.2"
+                      ></div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Middle: performance metrics -->
+              @if (t.metrics) {
+                <div class="grid grid-cols-2 gap-2 rounded-lg bg-surface-lowest p-2.5">
+                  @for (m of t.metrics; track m.label) {
+                    <div class="flex flex-col">
+                      <span class="text-[10px] font-semibold uppercase text-outline">{{ m.label }}</span>
+                      <span class="text-headline-sm font-data-mono font-bold" [class]="m.cls">{{ m.value }}</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Due + AI risk (asset cards) -->
+              @if (t.due) {
+                <div class="flex items-center justify-between text-label-sm text-outline">
+                  <span class="flex items-center gap-1 text-on-surface-variant">
+                    <span translate="no" class="material-symbols-outlined notranslate text-[15px]">event</span>
+                    {{ t.due }}
+                  </span>
+                  @if (t.risk) {
+                    <span class="flex items-center gap-1 rounded bg-tertiary/10 px-1.5 py-0.5 font-data-mono font-medium text-tertiary">
+                      <span class="h-1.5 w-1.5 rounded-full bg-tertiary"></span>
+                      {{ t.risk }}
+                    </span>
+                  }
+                </div>
+              }
+
+              <!-- Schedule note -->
+              @if (t.scheduleNote) {
+                <div class="flex items-center justify-between rounded bg-surface-lowest p-2 text-label-sm text-outline">
+                  <span class="flex items-center gap-1 font-medium text-primary">
+                    <span translate="no" class="material-symbols-outlined notranslate text-[15px]">{{ t.scheduleNote.icon }}</span>
+                    {{ t.scheduleNote.text }}
+                  </span>
+                  <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-tertiary">task_alt</span>
+                </div>
+              }
+
+              <!-- Footer -->
+              <div class="flex items-center justify-between pt-1 text-label-sm text-outline">
+                <div class="flex items-center gap-1.5">
+                  <img [src]="t.footer.assignee.image" [alt]="t.footer.assignee.name" class="h-5 w-5 rounded-full object-cover" />
+                  <span class="max-w-[90px] truncate text-on-surface-variant">{{ t.footer.assignee.name }}</span>
+                </div>
+
+                @switch (t.footer.kind) {
+                  @case ('counts') {
+                    <div class="flex items-center gap-2.5 font-data-mono text-label-sm">
+                      <span class="flex items-center gap-0.5">
+                        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chat_bubble</span>
+                        {{ t.footer.comments }}
+                      </span>
+                      <span class="flex items-center gap-0.5">
+                        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">{{
+                          t.footer.attachmentsIcon ?? 'attachment'
+                        }}</span>
+                        {{ t.footer.attachments }}
+                      </span>
+                    </div>
+                  }
+                  @case ('liveCounts') {
+                    <div class="flex items-center gap-2.5 font-data-mono text-label-sm">
+                      <span class="flex items-center gap-0.5">
+                        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">visibility</span>
+                        {{ t.footer.views }}
+                      </span>
+                      <span class="flex items-center gap-0.5">
+                        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">favorite</span>
+                        {{ t.footer.likes }}
+                      </span>
+                    </div>
+                  }
+                  @case ('badge') {
+                    <div class="flex items-center gap-2 font-data-mono text-label-sm">
+                      <span class="rounded bg-surface-container px-2 py-0.5" [class]="t.footer.badgeCls">
+                        {{ t.footer.badge }}
+                      </span>
+                    </div>
+                  }
+                }
+
+                <!-- Read-only mirror: task detail + link out to Asana. -->
+                <button
+                  type="button"
+                  (click)="openDetail(t)"
+                  title="Task detail"
+                  class="rounded p-1 text-outline transition-colors hover:bg-surface-container hover:text-primary"
+                >
+                  <span translate="no" class="material-symbols-outlined notranslate text-[16px]">open_in_full</span>
+                </button>
+                <button
+                  type="button"
+                  (click)="openAsana(t)"
+                  title="Open in Asana"
+                  class="rounded p-1 text-outline transition-colors hover:bg-surface-container hover:text-[#F06A6A]"
+                >
+                  <span translate="no" class="material-symbols-outlined notranslate text-[16px]">open_in_new</span>
+                </button>
+              </div>
+            </div>
+          } @empty {
+            @if (search()) {
+              <div class="rounded-lg bg-surface-low/50 px-3 py-6 text-center text-label-sm text-outline">
+                No tasks match the filter.
+              </div>
+            }
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ── Task detail modal (read-only Asana mirror) ─────────────────── -->
+@if (expandedTask(); as t) {
+  <div
+    class="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm"
+    (click)="closeDetail()"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Task detail"
+  >
+    <div
+      class="relative my-8 w-full max-w-2xl overflow-hidden rounded-xl border border-outline-variant/40 bg-surface-low text-on-surface shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Header -->
+      <div class="flex items-start justify-between gap-space-sm border-b border-outline-variant/20 bg-surface-container p-space-md">
+        <div class="flex min-w-0 flex-col gap-1">
+          <div class="flex flex-wrap items-center gap-2">
+            @if (t.format.brand) {
+              <app-brand-logo [platform]="t.format.brand" [size]="16" />
+            }
+            <span class="rounded bg-surface-highest px-2 py-0.5 font-data-mono text-label-sm font-semibold text-secondary">
+              {{ t.asn }}
+            </span>
+            <span class="rounded-full px-2 py-0.5 text-label-sm font-semibold" [class]="t.priority.cls">
+              {{ t.priority.label }}
+            </span>
+          </div>
+          <h2 class="text-headline-sm font-bold tracking-tight text-on-surface">{{ t.title }}</h2>
+          <div class="flex items-center gap-2">
+            @if (t.creator.image && !failedAvatars().has(t.id + '-modal')) {
+              <img [src]="t.creator.image" [alt]="t.creator.name" (error)="onAvatarError(t.id + '-modal')" class="h-5 w-5 rounded-full object-cover" />
+            }
+            <span class="text-body-sm text-on-surface-variant">{{ t.creator.name }} · {{ t.creator.handle }}</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="closeDetail()"
+          title="Close"
+          class="rounded-lg p-1.5 text-outline transition-colors hover:bg-surface-high hover:text-on-surface"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex max-h-[60vh] flex-col gap-space-md overflow-y-auto p-space-md">
+        @if (detailLoading()) {
+          <div class="flex items-center justify-center gap-2 py-space-lg text-body-sm text-outline">
+            <span translate="no" class="material-symbols-outlined notranslate text-[20px] animate-spin">progress_activity</span>
+            Fetching task from Asana…
+          </div>
+        }
+
+        <!-- Meta grid -->
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div class="flex flex-col rounded-lg bg-surface-lowest p-2.5">
+            <span class="text-label-sm uppercase tracking-wider text-outline">Stage</span>
+            <span class="mt-0.5 truncate text-body-sm font-semibold text-on-surface">{{ t.stageKey ?? '—' }}</span>
+          </div>
+          <div class="flex flex-col rounded-lg bg-surface-lowest p-2.5">
+            <span class="text-label-sm uppercase tracking-wider text-outline">Format</span>
+            <span class="mt-0.5 truncate text-body-sm font-semibold text-on-surface">{{ t.format.label }}</span>
+          </div>
+          <div class="flex flex-col rounded-lg bg-surface-lowest p-2.5">
+            <span class="text-label-sm uppercase tracking-wider text-outline">Fee</span>
+            <span class="mt-0.5 font-data-mono text-body-sm font-semibold text-on-surface">{{ t.fee }}</span>
+          </div>
+          <div class="flex flex-col rounded-lg bg-surface-lowest p-2.5">
+            <span class="text-label-sm uppercase tracking-wider text-outline">Due</span>
+            <span class="mt-0.5 font-data-mono text-body-sm font-semibold text-on-surface">{{ t.due ?? '—' }}</span>
+          </div>
+        </div>
+
+        <!-- Asana metadata (live rows only) -->
+        @if (detail(); as d) {
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            @if (d.assignee?.name; as assigneeName) {
+              <div class="flex items-center justify-between rounded-lg bg-surface-lowest px-3 py-2 text-label-sm">
+                <span class="text-outline">Assignee</span>
+                <span class="font-semibold text-on-surface">{{ assigneeName }}</span>
+              </div>
+            }
+            @if (d.memberships?.[0]?.section?.name; as sectionName) {
+              <div class="flex items-center justify-between rounded-lg bg-surface-lowest px-3 py-2 text-label-sm">
+                <span class="text-outline">Asana Section</span>
+                <span class="max-w-[140px] truncate font-semibold text-on-surface">{{ sectionName }}</span>
+              </div>
+            }
+            @if (d.modified_at) {
+              <div class="flex items-center justify-between rounded-lg bg-surface-lowest px-3 py-2 text-label-sm">
+                <span class="text-outline">Last Update</span>
+                <span class="font-data-mono font-semibold text-on-surface">{{ timeAgo(d.modified_at) }}</span>
+              </div>
+            }
+            @if (d.completed !== undefined) {
+              <div class="flex items-center justify-between rounded-lg bg-surface-lowest px-3 py-2 text-label-sm">
+                <span class="text-outline">Status</span>
+                <span class="font-semibold" [class]="d.completed ? 'text-tertiary' : 'text-on-surface'">
+                  {{ d.completed ? 'Completed' : 'Open' }}
+                </span>
+              </div>
+            }
+          </div>
+
+          @if (d.notes) {
+            <div class="flex flex-col gap-1.5 rounded-lg bg-surface-lowest p-3">
+              <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">Task Notes</span>
+              <p class="whitespace-pre-line text-body-sm leading-relaxed text-on-surface-variant">{{ d.notes }}</p>
+            </div>
+          }
+
+          @if (d.custom_fields?.length) {
+            <div class="flex flex-wrap gap-1.5">
+              @for (field of d.custom_fields; track field.name) {
+                @if (field.display_value) {
+                  <span class="rounded-full bg-surface-highest px-2.5 py-0.5 text-label-sm text-on-surface-variant">
+                    {{ field.name }}: <span class="font-semibold text-on-surface">{{ field.display_value }}</span>
+                  </span>
+                }
+              }
+            </div>
+          }
+        }
+
+        <!-- Attachments -->
+        <div class="flex flex-col gap-1.5">
+          <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">
+            Attachments ({{ attachments().length }})
+          </span>
+          @if (attachments().length > 0) {
+            @for (file of attachments(); track file.gid) {
+              <div class="flex items-center justify-between gap-2 rounded-lg bg-surface-lowest px-3 py-2">
+                <div class="flex min-w-0 items-center gap-2">
+                  <span translate="no" class="material-symbols-outlined notranslate text-[18px] text-primary">description</span>
+                  <div class="flex min-w-0 flex-col">
+                    <span class="truncate text-body-sm font-semibold text-on-surface">{{ file.name }}</span>
+                    <span class="font-data-mono text-label-sm text-outline">
+                      {{ file.resource_subtype }}{{ fmtSize(file.size) ? ' · ' + fmtSize(file.size) : '' }}
+                      @if (file.host?.name; as hostName) { · {{ hostName }} }
+                    </span>
+                  </div>
+                </div>
+                <span class="font-data-mono text-label-sm text-outline">{{ timeAgo(file.created_at) }}</span>
+              </div>
+            }
+          } @else {
+            <span class="rounded-lg bg-surface-lowest px-3 py-2.5 text-label-sm text-outline">
+              @if (t.gid) { No attachments on this task. } @else { Attachments sync with live Asana tasks. }
+            </span>
+          }
+        </div>
+
+        <!-- Comments -->
+        <div class="flex flex-col gap-1.5">
+          <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">
+            Comments ({{ comments().length }})
+          </span>
+          @if (comments().length > 0) {
+            @for (comment of comments(); track comment.created_at) {
+              <div class="flex flex-col gap-1 rounded-lg bg-surface-lowest p-3">
+                <div class="flex items-center justify-between text-label-sm">
+                  <span class="font-semibold text-on-surface">{{ comment.created_by?.name ?? 'Asana' }}</span>
+                  <span class="font-data-mono text-outline">{{ timeAgo(comment.created_at) }}</span>
+                </div>
+                <p class="whitespace-pre-line text-body-sm leading-relaxed text-on-surface-variant">{{ comment.text }}</p>
+              </div>
+            }
+          } @else {
+            <span class="rounded-lg bg-surface-lowest px-3 py-2.5 text-label-sm text-outline">
+              @if (t.gid) { No comments on this task. } @else { Comments sync with live Asana tasks. }
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between gap-space-sm border-t border-outline-variant/20 bg-surface-container p-space-md">
+        <span class="flex items-center gap-1.5 text-label-sm text-outline">
+          <span class="h-1.5 w-1.5 rounded-full bg-tertiary"></span>
+          Read-only Asana mirror
+        </span>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="closeDetail()"
+            class="rounded-lg bg-surface-high px-4 py-2 text-body-sm font-semibold text-on-surface transition-all hover:bg-surface-bright"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            (click)="openAsana(t)"
+            class="flex items-center gap-2 rounded-lg bg-primary-container px-4 py-2 text-body-sm font-semibold text-on-primary-container transition-all hover:bg-primary hover:text-on-primary"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[18px]">open_in_new</span>
+            Open in Asana
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

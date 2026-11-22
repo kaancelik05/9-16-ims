@@ -1,0 +1,186 @@
+<div class="flex w-full flex-col gap-space-lg pb-space-xl">
+  <!-- ── Header ────────────────────────────────────────────────────── -->
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center gap-2 text-label-sm text-outline">
+        <span class="font-medium text-primary">Workspace</span>
+      </div>
+      <h1 class="text-headline-lg font-bold tracking-tight text-on-surface">Settings</h1>
+    </div>
+    @if (note()) {
+      <span class="rounded-full bg-primary-container/15 px-3 py-1.5 text-label-sm font-medium text-primary">
+        {{ note() }}
+      </span>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 gap-space-lg lg:grid-cols-3">
+    <!-- ── Account ────────────────────────────────────────────────── -->
+    <div class="flex flex-col gap-space-md rounded-xl border border-outline-variant/30 bg-surface-low p-space-lg shadow-2xl">
+      <div class="flex items-center gap-2">
+        <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-primary">account_circle</span>
+        <h2 class="text-title-md font-bold text-on-surface">Account</h2>
+      </div>
+      <div class="flex flex-col gap-2 rounded-lg bg-surface-lowest p-3">
+        <span class="text-body-sm font-semibold text-on-surface">
+          {{ auth.profile()?.full_name ?? auth.userEmail() ?? 'Agency User' }}
+        </span>
+        <span class="font-data-mono text-label-sm text-outline">{{ auth.userEmail() ?? '—' }}</span>
+        <span class="mt-1 w-fit rounded-full bg-primary-container/20 px-2 py-0.5 font-data-mono text-label-sm font-semibold uppercase tracking-wider text-primary">
+          {{ auth.profile()?.role ?? 'viewer' }}
+        </span>
+      </div>
+      <a
+        routerLink="/settings/profile"
+        class="flex items-center justify-center gap-2 rounded-lg bg-surface-high px-4 py-2.5 text-body-md font-semibold text-on-surface transition-all hover:bg-surface-bright"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[18px]">person</span>
+        View profile
+      </a>
+    </div>
+
+    <!-- ── Asana integration ──────────────────────────────────────── -->
+    <div class="flex flex-col gap-space-md rounded-xl border border-outline-variant/30 bg-surface-low p-space-lg shadow-2xl">
+      <div class="flex items-center gap-2">
+        <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-[#F06A6A]">sync_alt</span>
+        <h2 class="text-title-md font-bold text-on-surface">Asana Integration</h2>
+      </div>
+      @if (connection(); as c) {
+        <div class="flex flex-col gap-2 rounded-lg bg-surface-lowest p-3 font-data-mono text-label-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-outline">Project</span>
+            <span class="max-w-[160px] truncate font-semibold text-on-surface">{{ c.project_name ?? c.project_gid }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-outline">Webhook</span>
+            <span class="flex items-center gap-1" [class]="c.webhook_id ? 'text-tertiary' : 'text-outline'">
+              <span class="h-1.5 w-1.5 rounded-full" [class]="c.webhook_id ? 'bg-tertiary' : 'bg-outline'"></span>
+              {{ c.webhook_id ? 'Live' : 'Not connected' }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-outline">Last sync</span>
+            <span class="text-on-surface">{{ c.last_sync_at ? timeAgo(c.last_sync_at) : '—' }}</span>
+          </div>
+        </div>
+        <a
+          [href]="'https://app.asana.com/0/' + c.project_gid"
+          target="_blank"
+          rel="noopener"
+          class="flex items-center justify-center gap-2 rounded-lg bg-surface-high px-4 py-2.5 text-body-md font-semibold text-on-surface transition-all hover:bg-surface-bright"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px]">open_in_new</span>
+          Open project board
+        </a>
+      } @else {
+        <p class="text-body-sm text-on-surface-variant">
+          No linked project. Connect a webhook from the Campaign board.
+        </p>
+      }
+      <p class="text-label-sm text-outline">PAT lives only in Edge Function secrets.</p>
+    </div>
+
+    <!-- ── Metric provenance ──────────────────────────────────────── -->
+    <div class="flex flex-col gap-space-md rounded-xl border border-outline-variant/30 bg-surface-low p-space-lg shadow-2xl">
+      <div class="flex items-center gap-2">
+        <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-primary">fact_check</span>
+        <h2 class="text-title-md font-bold text-on-surface">Data Sources</h2>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between rounded-lg bg-surface-lowest p-2.5">
+          <span class="flex items-center gap-2 text-body-sm text-on-surface">
+            <span class="rounded bg-primary-container/20 px-1.5 py-0.5 font-data-mono text-label-sm font-semibold text-primary">API</span>
+            Creator OAuth (Faz 4)
+          </span>
+          <span class="font-data-mono text-body-sm text-on-surface">{{ sourceCount('api') }}</span>
+        </div>
+        <div class="flex items-center justify-between rounded-lg bg-surface-lowest p-2.5">
+          <span class="flex items-center gap-2 text-body-sm text-on-surface">
+            <span class="rounded bg-tertiary-container/20 px-1.5 py-0.5 font-data-mono text-label-sm font-semibold text-tertiary">Declared</span>
+            Creator-declared
+          </span>
+          <span class="font-data-mono text-body-sm text-on-surface">{{ sourceCount('declared') }}</span>
+        </div>
+        <div class="flex items-center justify-between rounded-lg bg-surface-lowest p-2.5">
+          <span class="flex items-center gap-2 text-body-sm text-on-surface">
+            <span class="rounded bg-surface-highest px-1.5 py-0.5 font-data-mono text-label-sm font-semibold text-outline">Manual</span>
+            Agency-entered
+          </span>
+          <span class="font-data-mono text-body-sm text-on-surface">{{ sourceCount('manual') }}</span>
+        </div>
+      </div>
+      <p class="text-label-sm text-outline">Consent-first: every metric row carries its source.</p>
+    </div>
+  </div>
+
+  <!-- ── Team ───────────────────────────────────────────────────────── -->
+  <div class="flex flex-col gap-space-md rounded-xl border border-outline-variant/30 bg-surface-low p-space-lg shadow-2xl">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-primary">group</span>
+        <h2 class="text-title-md font-bold text-on-surface">Team</h2>
+      </div>
+      <span class="font-data-mono text-label-sm text-outline">
+        {{ team().length }} members · {{ isAdmin() ? 'role changes enabled' : 'read-only (admin only)' }}
+      </span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left">
+        <thead>
+          <tr class="text-label-sm uppercase tracking-wider text-outline">
+            <th class="px-3 py-2 font-medium">Member</th>
+            <th class="px-3 py-2 font-medium">Role</th>
+            <th class="px-3 py-2 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody class="font-data-mono text-body-sm">
+          @for (member of team(); track member.id) {
+            <tr class="border-t border-outline-variant/20">
+              <td class="px-3 py-2.5">
+                <div class="flex items-center gap-2.5">
+                  <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-highest text-label-sm font-bold text-on-surface">
+                    {{ initials(member.full_name, member.email) }}
+                  </span>
+                  <div class="flex min-w-0 flex-col">
+                    <span class="truncate font-sans font-semibold text-on-surface">
+                      {{ member.full_name ?? member.email }}
+                      @if (member.id === selfId()) {
+                        <span class="ml-1 text-label-sm font-medium text-tertiary">(you)</span>
+                      }
+                    </span>
+                    <span class="truncate text-label-sm text-outline">{{ member.email }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="px-3 py-2.5">
+                @if (isAdmin() && member.id !== selfId()) {
+                  <select
+                    [value]="member.role"
+                    [disabled]="savingId() !== null"
+                    (change)="changeRole(member, $any($event.target).value)"
+                    class="cursor-pointer rounded-lg border border-outline-variant/40 bg-surface-lowest px-2 py-1 font-sans text-body-sm text-on-surface focus:border-primary focus:outline-none disabled:opacity-50"
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                } @else {
+                  <span class="rounded-full bg-surface-highest px-2.5 py-0.5 font-sans text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+                    {{ member.role }}
+                  </span>
+                }
+              </td>
+              <td class="px-3 py-2.5">
+                <span class="flex items-center gap-1.5 text-tertiary">
+                  <span class="h-1.5 w-1.5 rounded-full bg-tertiary"></span>
+                  Active
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

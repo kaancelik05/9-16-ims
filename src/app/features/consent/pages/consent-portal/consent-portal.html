@@ -1,0 +1,318 @@
+<div
+  class="flex min-h-screen flex-col items-center justify-center p-4 selection:bg-[#3b82f6] selection:text-white sm:p-6 lg:p-8"
+  style="
+    background-color: #0c0e11;
+    background-image:
+      radial-gradient(at 50% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 65%),
+      radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
+      linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      100% 100%,
+      40px 40px,
+      40px 40px;
+  "
+>
+  <main class="relative z-10 mx-auto my-auto w-full max-w-xl">
+    <!-- Authorization card -->
+    <div
+      class="relative rounded-2xl border border-white/10 bg-[#161920] p-6 shadow-[0_0_50px_-15px_rgba(59,130,246,0.18),0_25px_40px_-20px_rgba(0,0,0,0.85)] backdrop-blur-xl sm:rounded-3xl sm:p-8"
+    >
+      <!-- Header -->
+      <section class="flex flex-col items-center text-center">
+        <!-- Brand mark (local — no remote dependency) -->
+        <div class="mb-5 flex w-48 items-center justify-center gap-2.5 sm:w-56">
+          <app-logo [width]="26" [height]="20" class="text-white" />
+          <div class="flex flex-col items-start">
+            <span class="text-headline-sm font-bold tracking-tight text-white">9-16 IMP</span>
+            <span class="text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+              Media Engine
+            </span>
+          </div>
+        </div>
+
+        <!-- OAuth security badge -->
+        <div
+          class="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-medium tracking-wide text-emerald-400 shadow-sm"
+        >
+          <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path
+              clip-rule="evenodd"
+              d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
+          <span>256-Bit Encrypted OAuth 2.0 • Agency Verified</span>
+        </div>
+
+        <!-- Titles -->
+        <h1 class="text-xl font-bold leading-snug tracking-tight text-white sm:text-2xl">
+          9-16 Creator Data &amp; Campaign Authorization
+        </h1>
+        <p class="mt-2 max-w-md text-sm leading-relaxed text-slate-400">
+          Grant 9-16 IMP permission to sync your public social analytics for active campaigns.
+        </p>
+
+        <!-- Creator context pill -->
+        <div
+          class="mt-5 flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-3 text-left shadow-inner"
+        >
+          <div class="flex min-w-0 items-center gap-3">
+            <div class="relative h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-tr from-[#2563eb] to-indigo-500 p-0.5 shadow-md">
+              <div class="flex h-full w-full items-center justify-center rounded-full bg-[#1a1e26] text-xs font-bold text-white">
+                {{ initials() }}
+              </div>
+              <span
+                class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#161920] bg-emerald-500"
+                title="Active Session"
+              ></span>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-medium text-slate-400">Connecting as</span>
+                <span class="inline-block h-1 w-1 rounded-full bg-slate-500"></span>
+                <span class="truncate text-xs font-semibold text-white">{{ context().name }}</span>
+              </div>
+              <p class="truncate font-mono text-xs text-[#60a5fa]">{{ context().handle }}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-shrink-0 items-center gap-1.5" title="Connected Social Channels: Instagram, TikTok, YouTube">
+            @for (p of platforms; track p) {
+              <span class="rounded border border-slate-700/60 bg-[#262a34] px-2 py-0.5">
+                <app-brand-logo [platform]="p" [size]="12" />
+              </span>
+            }
+          </div>
+        </div>
+      </section>
+
+        <!-- Token error state (invalid / expired / already used) -->
+        @if (tokenError()) {
+          <div
+            class="mt-4 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-left"
+            role="alert"
+          >
+            <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path clip-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" fill-rule="evenodd"></path>
+            </svg>
+            <div class="text-xs leading-relaxed text-rose-300">
+              <p class="font-semibold text-rose-200">Link unavailable</p>
+              <p class="mt-0.5">{{ tokenError() }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Permissions form -->
+        <form class="mt-6 space-y-4" (submit)="$event.preventDefault(); approve()">
+        <!-- Item 1: Read-only analytics -->
+        <article
+          class="rounded-xl border border-white/10 bg-black/20 p-4 transition-all duration-200 hover:border-slate-600/80"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="mb-1.5 flex flex-wrap items-center gap-2">
+                <h2 class="flex items-center gap-2 text-sm font-semibold text-white">
+                  <span>Read-Only Campaign Analytics</span>
+                </h2>
+                <span
+                  class="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400"
+                >
+                  Read-Only • Zero Posting Permissions
+                </span>
+              </div>
+              <p class="text-xs leading-relaxed text-slate-400">
+                Read-only access to campaign performance metrics. 9-16 IMP will never post on
+                your behalf.
+              </p>
+            </div>
+
+            <div class="flex-shrink-0 pt-0.5">
+              <label class="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  class="peer sr-only"
+                  [checked]="analyticsOn()"
+                  (change)="analyticsOn.set(!analyticsOn())"
+                />
+                <div
+                  class="after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white h-6 w-11 rounded-full bg-slate-700 shadow-sm peer-checked:bg-[#3b82f6] peer-focus:outline-none"
+                ></div>
+              </label>
+            </div>
+          </div>
+        </article>
+
+        <!-- Item 2: Terms & conditions -->
+        <article
+          class="rounded-xl border border-white/10 bg-black/20 p-4 transition-all duration-200 hover:border-slate-600/80"
+        >
+          <div class="flex items-start gap-3">
+            <div class="mt-0.5 flex h-5 items-center">
+              <input
+                id="terms-conditions"
+                type="checkbox"
+                class="h-4 w-4 cursor-pointer rounded border-slate-600 bg-slate-800 text-[#2563eb] transition-colors focus:ring-2 focus:ring-[#3b82f6]"
+                [checked]="termsAccepted()"
+                (change)="termsAccepted.set(!termsAccepted())"
+              />
+            </div>
+            <div class="flex-1 text-xs">
+              <label for="terms-conditions" class="cursor-pointer select-none font-semibold text-white">
+                9-16 Agency Influencer Terms &amp; Conditions
+              </label>
+              <p class="mt-1 leading-relaxed text-slate-400">
+                Standard influencer marketing terms, NDA and deliverable tracking.
+                <a href="#terms-modal" class="ml-1 text-[#60a5fa] underline underline-offset-2 transition-colors hover:text-[#93c5fd]">
+                  View Terms &amp; Conditions
+                </a>
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Item 3: Notifications -->
+        <article
+          class="rounded-xl border border-white/10 bg-black/20 p-4 transition-all duration-200 hover:border-slate-600/80"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="mb-1.5 flex items-center gap-2">
+                <h2 class="text-sm font-semibold text-white">Campaign Deliverable Alerts &amp; Notifications</h2>
+                <span
+                  class="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-2 py-0.5 text-[10px] font-semibold text-[#60a5fa]"
+                >
+                  Recommended
+                </span>
+              </div>
+              <p class="text-xs leading-relaxed text-slate-400">
+                Milestone, brief and payment alerts via Email &amp; WhatsApp.
+              </p>
+            </div>
+
+            <div class="flex-shrink-0 pt-0.5">
+              <label class="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  class="peer sr-only"
+                  [checked]="notificationsOn()"
+                  (change)="notificationsOn.set(!notificationsOn())"
+                />
+                <div
+                  class="after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white h-6 w-11 rounded-full bg-slate-700 shadow-sm peer-checked:bg-[#3b82f6] peer-focus:outline-none"
+                ></div>
+              </label>
+            </div>
+          </div>
+        </article>
+
+        <!-- Trust guarantees strip -->
+        <div
+          class="flex flex-wrap items-center justify-around gap-2 rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-[11px] font-medium tracking-tight text-slate-400"
+        >
+          <span class="flex items-center gap-1.5 text-slate-300">
+            <svg class="h-3.5 w-3.5 flex-shrink-0 text-[#60a5fa]" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                clip-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                fill-rule="evenodd"
+              ></path>
+            </svg>
+            Read-Only API Tokens
+          </span>
+          <span class="hidden text-slate-600 sm:inline">•</span>
+          <span class="flex items-center gap-1.5 text-slate-300">
+            <svg class="h-3.5 w-3.5 flex-shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                clip-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                fill-rule="evenodd"
+              ></path>
+            </svg>
+            Revoke Access Anytime
+          </span>
+          <span class="hidden text-slate-600 sm:inline">•</span>
+          <span class="flex items-center gap-1.5 text-slate-300">
+            <svg class="h-3.5 w-3.5 flex-shrink-0 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                clip-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                fill-rule="evenodd"
+              ></path>
+            </svg>
+            GDPR &amp; CCPA Compliant
+          </span>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="space-y-3 pt-3">
+          <button
+            type="submit"
+            [disabled]="grantState() !== 'idle' || tokenError() !== null"
+            class="group relative flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all duration-200 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-[#60a5fa] focus:ring-offset-2 focus:ring-offset-[#161920] disabled:cursor-wait disabled:opacity-90"
+            [class]="
+              grantState() === 'connected'
+                ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 shadow-lg shadow-emerald-500/25'
+                : 'bg-gradient-to-r from-[#3b82f6] to-[#2563eb] shadow-lg shadow-[#3b82f6]/25 hover:from-[#2563eb] hover:to-[#1d4ed8] hover:shadow-[#3b82f6]/40'
+            "
+          >
+            @if (grantState() === 'authorizing') {
+              <svg class="-ml-1 mr-2 h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span>Authorizing 9-16 Handshake...</span>
+            } @else if (grantState() === 'connected') {
+              <svg class="h-4 w-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span>Connected Successfully</span>
+            } @else {
+              <span>Approve &amp; Connect Accounts</span>
+              <svg
+                class="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            }
+          </button>
+
+          @if (grantError()) {
+            <p class="text-center text-xs font-medium text-rose-300" role="alert">
+              {{ grantError() }}
+            </p>
+          }
+
+          <div class="text-center">
+            <a
+              href="#cancel"
+              class="inline-block py-1 text-xs font-medium text-slate-400 underline-offset-4 transition-colors hover:text-slate-200 hover:underline"
+            >
+              Cancel or Switch Account
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Security footer -->
+    <footer class="mt-5 px-4 text-center">
+      <p class="text-[11px] leading-relaxed text-slate-500">
+        Credentials never stored · processed via official partner APIs. Need assistance?
+        <a class="text-slate-400 underline underline-offset-2 transition-colors hover:text-[#60a5fa]" href="mailto:security@916media.com">
+          security@916media.com
+        </a>
+      </p>
+    </footer>
+  </main>
+</div>

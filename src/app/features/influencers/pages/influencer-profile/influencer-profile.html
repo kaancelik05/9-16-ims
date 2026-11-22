@@ -1,0 +1,500 @@
+<div class="flex w-full flex-col gap-space-lg pb-space-xl">
+  @if (notFound()) {
+    <!-- ── Unknown creator id (Faz 2: real lookup, no silent fallback) ── -->
+    <div
+      class="flex flex-wrap items-center justify-between gap-space-sm rounded-xl border border-error/40 bg-error/10 px-space-md py-space-sm"
+    >
+      <div class="flex items-center gap-2.5">
+        <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-error"
+          >error</span
+        >
+        <div>
+          <p class="text-title-sm font-semibold text-on-surface">Creator not found</p>
+          <p class="text-label-sm text-on-surface-variant">
+            No roster entry with id <span class="font-data-mono">{{ id() }}</span>.
+          </p>
+        </div>
+      </div>
+      <a
+        routerLink="/influencers"
+        class="rounded-lg bg-surface-high px-3 py-2 text-label-md font-semibold text-on-surface shadow-sm transition-all hover:bg-surface-container"
+      >
+        Back to Directory
+      </a>
+    </div>
+  }
+
+  <!-- ── 1. Breadcrumb & executive actions ──────────────────────── -->
+  <div class="flex flex-col justify-between gap-space-md lg:flex-row lg:items-center">
+    <div class="flex flex-wrap items-center gap-space-xs text-label-md text-outline">
+      <a routerLink="/influencers" class="transition-colors hover:text-on-surface">Directory</a>
+      <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+      <a routerLink="/influencers" class="transition-colors hover:text-on-surface">Influencers</a>
+      <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+      <span class="font-semibold text-on-surface">{{ profile().name }}</span>
+      <span class="font-data-mono text-primary">({{ profile().handle }})</span>
+      <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+      <span class="flex items-center gap-1 font-semibold text-tertiary">
+        <span class="h-1.5 w-1.5 rounded-full bg-tertiary"></span>
+        Profile &amp; Safety Audit
+      </span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2.5">
+      <button
+        type="button"
+        (click)="exportMediaKit()"
+        [disabled]="exporting()"
+        title="Download this creator's media kit as PDF"
+        class="flex items-center gap-2 rounded-lg bg-primary-container px-4 py-2 text-body-md font-semibold text-on-primary-container shadow-[0_4px_16px_rgba(77,142,255,0.25)] transition-all hover:bg-primary hover:text-on-primary disabled:opacity-50"
+      >
+        @if (exporting()) {
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px] animate-spin">progress_activity</span>
+          <span>Preparing…</span>
+        } @else {
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px]">download</span>
+          <span>Media Kit (PDF)</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 2. Hero creator profile header bento ───────────────────── -->
+  <div
+    class="relative w-full overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-low p-space-lg shadow-2xl"
+  >
+    <!-- Ambient glows -->
+    <div class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-primary/10 blur-3xl"></div>
+    <div class="pointer-events-none absolute -left-16 bottom-0 h-72 w-72 rounded-full bg-tertiary/10 blur-3xl"></div>
+
+    <div class="relative flex flex-col gap-space-lg xl:flex-row xl:items-start xl:justify-between">
+      <!-- Left column: identity bento + channel dock -->
+      <div class="flex min-w-0 flex-1 flex-col gap-space-md">
+        <div class="flex flex-col gap-space-md sm:flex-row sm:items-start">
+        <div class="group relative shrink-0">
+          <div class="rounded-xl bg-surface-container p-1 shadow-md">
+            @if (failedAvatar() || !profile().image) {
+              <div
+                class="grid h-24 w-24 place-items-center rounded-lg bg-gradient-to-br from-primary-container to-[#3b82f6] text-headline-sm font-bold text-white shadow-md sm:h-28 sm:w-28"
+              >
+                {{ initials() }}
+              </div>
+            } @else {
+              <img
+                [src]="profile().image"
+                [alt]="profile().name"
+                (error)="failedAvatar.set(true)"
+                class="h-24 w-24 rounded-lg object-cover shadow-md sm:h-28 sm:w-28"
+              />
+            }
+          </div>
+          <span class="absolute -bottom-1 -right-1 flex h-4 w-4">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-tertiary opacity-75"></span>
+            <span
+              class="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-tertiary text-[10px] font-bold text-on-tertiary shadow-sm"
+              >✓</span
+            >
+          </span>
+        </div>
+
+        <div class="flex flex-1 flex-col gap-2">
+          <!-- Name & verification -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <h1 class="text-headline-lg font-bold tracking-tight text-on-surface">
+              {{ profile().name }}
+            </h1>
+            <span
+              translate="no"
+              class="material-symbols-outlined notranslate text-[20px] text-primary"
+              title="Platform Verified"
+              >verified</span
+            >
+            <span
+              class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 font-data-mono text-label-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+            >
+              <span>{{ profile().handle }}</span>
+              <span translate="no" class="material-symbols-outlined notranslate text-[14px]">open_in_new</span>
+            </span>
+            @if (profile().assignedCampaign) {
+              <span
+                class="flex items-center gap-1.5 rounded-full bg-primary-container/20 px-2.5 py-0.5 text-label-sm font-semibold text-primary shadow-[0_0_12px_rgba(77,142,255,0.2)]"
+              >
+                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-primary"></span>
+                In Flight: {{ profile().assignedCampaign }}
+              </span>
+            } @else {
+              <span
+                class="flex items-center gap-1.5 rounded-full bg-tertiary-container/20 px-2.5 py-0.5 text-label-sm font-semibold text-tertiary shadow-[0_0_12px_rgba(78,222,163,0.2)]"
+              >
+                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-tertiary"></span>
+                Available for Q3/Q4
+              </span>
+            }
+          </div>
+
+          <!-- Geographic & compliance pills -->
+          <div class="flex flex-wrap items-center gap-2 py-0.5 text-body-sm text-on-surface-variant">
+            <div class="flex items-center gap-1.5 rounded-md bg-surface-container px-2.5 py-1">
+              <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-outline">location_on</span>
+              <span class="font-medium text-on-surface">{{ profile().location }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 rounded-md bg-surface-container px-2.5 py-1">
+              <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-outline">schedule</span>
+              <span class="font-data-mono font-medium text-on-surface">{{ profile().timezone }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 rounded-md bg-tertiary/10 px-2.5 py-1 text-tertiary">
+              <span translate="no" class="material-symbols-outlined notranslate text-[16px]">verified_user</span>
+              <span class="text-label-sm font-semibold">100% FTC Clear</span>
+            </div>
+          </div>
+
+          <!-- Niche tags -->
+          <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+            @for (tag of profile().tags; track tag) {
+              <span
+                class="rounded-md border border-outline-variant/30 bg-surface-container px-2.5 py-1 text-label-sm text-on-surface"
+                [class.font-data-mono]="$last"
+              >
+                {{ tag }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+
+        <!-- Connected social channel dock (under the identity bento) -->
+        <div class="grid w-full grid-cols-2 gap-2 border-t border-outline-variant/30 pt-space-md">
+          @for (p of profile().platforms; track p.name) {
+            <a
+              href="#"
+              class="group flex items-center justify-between gap-2 rounded-full bg-surface-container px-3 py-1.5 text-on-surface shadow-sm transition-colors hover:bg-surface-high"
+            >
+              <div class="flex min-w-0 items-center gap-2">
+                <div
+                  class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 transition-transform group-hover:scale-105"
+                  [class]="p.iconWrap"
+                >
+                  <app-brand-logo [platform]="p.brand" [size]="13" />
+                </div>
+                <span class="truncate text-body-sm font-semibold">
+                  {{ p.name.split(' ')[0] }}
+                </span>
+              </div>
+              <div class="flex shrink-0 items-center gap-1.5 font-data-mono text-label-sm">
+                <span class="font-bold text-primary">{{ p.followers }}</span>
+                <span class="text-outline">{{ p.dockMeta }}</span>
+              </div>
+            </a>
+          }
+        </div>
+      </div>
+
+      <!-- Representation & financials card -->
+      <div
+        class="flex w-full shrink-0 flex-col gap-space-sm rounded-xl bg-surface-lowest p-space-md shadow-inner xl:w-auto xl:min-w-[340px]"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">
+            Representation
+          </span>
+          <a
+            [href]="'mailto:' + profile().agentEmail"
+            title="Email the representative"
+            class="flex items-center gap-1.5 rounded-md bg-surface-container px-2.5 py-1 text-body-sm text-primary transition-colors hover:bg-surface-high hover:text-on-surface"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[15px]">mail</span>
+            <span class="font-data-mono text-label-sm">{{ profile().agentEmail }}</span>
+          </a>
+        </div>
+
+        <div class="flex flex-col gap-1 rounded-lg bg-surface-container p-2.5">
+          <span class="text-label-sm uppercase tracking-wider text-outline">Base Rate · 9:16 Bundle</span>
+          <span class="text-headline-sm font-data-mono font-bold text-primary">
+            {{ profile().baseRate }}
+          </span>
+        </div>
+
+        <div class="flex flex-col gap-1 rounded-lg bg-surface-container p-2.5">
+          <span class="text-label-sm uppercase tracking-wider text-outline">30d Brand Deals</span>
+          <span class="text-headline-sm font-data-mono font-bold text-on-surface">
+            {{ profile().deals }}
+          </span>
+        </div>
+
+        <div
+          class="flex items-center justify-between rounded-lg px-2.5 py-2 text-label-sm"
+          [class]="
+            profile().assignedCampaign
+              ? 'bg-tertiary/10 text-tertiary'
+              : 'bg-surface-container text-outline'
+          "
+        >
+          <span class="flex items-center gap-1.5 font-semibold">
+            <span
+              class="h-1.5 w-1.5 rounded-full"
+              [class]="profile().assignedCampaign ? 'bg-tertiary' : 'bg-outline'"
+            ></span>
+            {{ profile().assignedCampaign ? 'Active Flight' : 'Open Capacity' }}
+          </span>
+          @if (profile().assignedCampaign) {
+            <span class="max-w-[150px] truncate font-data-mono text-[11px]">
+              {{ profile().assignedCampaign }}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. Platform telemetry grid ─────────────────────────────── -->
+  <div class="grid grid-cols-1 gap-space-md md:grid-cols-2 xl:grid-cols-4">
+    @for (p of profile().platforms; track p.name) {
+      <div
+        class="flex flex-col justify-between rounded-xl bg-surface-low p-space-md shadow-md transition-all hover:bg-surface-container"
+      >
+        <div class="flex items-center justify-between pb-space-sm">
+          <div class="flex items-center gap-2">
+            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-container" [class]="p.iconWrap">
+              <app-brand-logo [platform]="p.brand" [size]="18" />
+            </div>
+            <span class="text-title-md text-on-surface">{{ p.name }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-baseline justify-between py-space-xs">
+          <div>
+            <span class="flex items-center gap-1.5 text-label-sm text-outline">
+              {{ p.followerLabel }}
+              @if (p.source) {
+                <span
+                  class="rounded bg-surface-highest px-1 py-px font-data-mono text-[9px] font-medium uppercase tracking-wide text-outline"
+                  [title]="'Metric source: ' + p.source + ' (consent-first provenance)'"
+                >
+                  {{ p.source }}
+                </span>
+              }
+            </span>
+            <p class="text-headline-lg font-data-mono font-bold text-on-surface">{{ p.followers }}</p>
+          </div>
+          <div class="flex flex-col items-end gap-0.5">
+            @if (p.delta) {
+              <span class="flex items-center justify-end gap-0.5 text-label-sm font-semibold text-tertiary">
+                <span translate="no" class="material-symbols-outlined notranslate text-[14px]">trending_up</span>
+                {{ p.delta }}
+              </span>
+            } @else if (p.rightCaption) {
+              <span class="flex items-center justify-end gap-0.5 text-label-sm font-semibold text-tertiary">
+                @if (p.rightCaptionIcon) {
+                  <span translate="no" class="material-symbols-outlined notranslate text-[14px]">{{ p.rightCaptionIcon }}</span>
+                }
+                {{ p.rightCaption }}
+              </span>
+            }
+            <span class="font-data-mono text-body-sm font-semibold text-on-surface">{{ p.rightMain }}</span>
+          </div>
+        </div>
+
+        <!-- Sparkline -->
+        <div class="py-1">
+          <svg
+            class="h-8 w-full overflow-visible"
+            [class]="p.sparkColor"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 100 24"
+          >
+            <polyline [attr.points]="p.spark"></polyline>
+          </svg>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 rounded-lg bg-surface-lowest p-2 pt-space-xs font-data-mono text-body-sm">
+          <div>
+            <span class="block text-label-sm text-outline">{{ p.stat1.label }}</span>
+            <span class="font-semibold" [class]="p.stat1.valueClass">{{ p.stat1.value }}</span>
+          </div>
+          <div>
+            <span class="block text-label-sm text-outline">{{ p.stat2.label }}</span>
+            <span class="font-semibold" [class]="p.stat2.valueClass">{{ p.stat2.value }}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── Agency notes (internal) ────────────────────────────────── -->
+  @if (profile().notes) {
+    <div class="flex flex-col gap-space-sm rounded-xl border border-outline-variant/30 bg-surface-low p-space-md shadow-md">
+      <div class="flex items-center gap-2">
+        <span translate="no" class="material-symbols-outlined notranslate text-[18px] text-primary">sticky_note_2</span>
+        <h2 class="text-title-md font-bold text-on-surface">Agency Notes</h2>
+        <span class="rounded-full bg-surface-high px-2 py-0.5 font-data-mono text-label-sm uppercase tracking-wider text-outline">
+          Internal
+        </span>
+      </div>
+      <p class="whitespace-pre-line text-body-md leading-relaxed text-on-surface-variant">
+        {{ profile().notes }}
+      </p>
+    </div>
+  }
+
+  <!-- ── 4. AI brand safety & reputation audit ──────────────────── -->
+  <div
+    class="relative flex flex-col gap-space-md overflow-hidden rounded-xl bg-surface-low p-space-lg shadow-2xl"
+  >
+    <div class="pointer-events-none absolute right-1/4 top-0 h-48 w-96 rounded-full bg-tertiary/10 blur-3xl"></div>
+
+    <div class="flex flex-col justify-between gap-space-md lg:flex-row lg:items-center">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <span class="h-2.5 w-2.5 animate-ping rounded-full bg-tertiary"></span>
+          <h2 class="text-headline-md font-bold text-on-surface">AI Reputation &amp; Brand Safety Audit</h2>
+        </div>
+        <p class="max-w-3xl text-body-sm text-on-surface-variant">
+          Autonomous multi-vector crawler analyzing 36 months of social mentions, FTC hashtag
+          compliance, PR sentiment, and news press.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-space-sm">
+        <button
+          type="button"
+          (click)="rerunAudit()"
+          [disabled]="auditState() === 'running'"
+          class="flex items-center gap-2 rounded-lg bg-tertiary-container px-4 py-2.5 text-body-md font-bold text-on-tertiary shadow-[0_4px_16px_rgba(78,222,163,0.25)] transition-all hover:bg-tertiary disabled:pointer-events-none disabled:opacity-80"
+        >
+          @if (auditState() === 'running') {
+            <span translate="no" class="material-symbols-outlined notranslate animate-spin text-[20px]">autorenew</span>
+            <span>Analyzing 120,000+ Posts...</span>
+          } @else if (auditState() === 'completed') {
+            <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-tertiary">done_all</span>
+            <span>Audit Completed Just Now</span>
+          } @else {
+            <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-tertiary">done_all</span>
+            <span>Last Audit: 2h Ago — Rerun</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Flag status hero card -->
+    <div
+      class="flex flex-col items-start justify-between gap-space-md rounded-xl bg-surface-lowest p-space-md shadow-inner lg:flex-row lg:items-center"
+    >
+      <div class="flex items-center gap-space-md">
+        <div
+          class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-tertiary/15 text-tertiary shadow-[0_0_24px_rgba(78,222,163,0.3)]"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[34px]">verified</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-headline-sm font-bold text-tertiary">
+            GREEN FLAG — {{ profile().auditScore }}% VERIFIED SAFE
+          </span>
+          <p class="text-body-sm text-on-surface-variant">{{ profile().auditDesc }}</p>
+        </div>
+      </div>
+
+      <div class="flex w-full flex-wrap gap-2 lg:w-auto">
+        <div class="flex items-center gap-1.5 rounded-lg bg-surface-container px-3 py-1.5">
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-tertiary">check_circle</span>
+          <span class="text-label-sm text-on-surface">0 Brand Conflicts</span>
+        </div>
+        <div class="flex items-center gap-1.5 rounded-lg bg-surface-container px-3 py-1.5">
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-tertiary">gavel</span>
+          <span class="text-label-sm text-on-surface">100% FTC Compliance</span>
+        </div>
+        <div class="flex items-center gap-1.5 rounded-lg bg-surface-container px-3 py-1.5">
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-tertiary">shield</span>
+          <span class="text-label-sm text-on-surface">0 Toxicity / Hate Speech</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 5. Asana campaign assignment & pipeline ────────────────── -->
+  <div class="flex flex-col gap-space-md rounded-xl bg-surface-low p-space-lg shadow-xl">
+    <div class="flex flex-col justify-between gap-space-md sm:flex-row sm:items-center">
+      <div class="flex items-center gap-space-sm">
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-container/20 text-primary">
+          <span translate="no" class="material-symbols-outlined notranslate text-[22px]">assignment</span>
+        </div>
+        <h3 class="text-headline-sm font-bold text-on-surface">
+          Active Asana Integration &amp; Deliverable Pipeline
+        </h3>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="relative">
+          <select
+            #campSel
+            class="h-9 cursor-pointer appearance-none rounded-lg bg-surface-lowest pl-3 pr-8 text-body-sm text-on-surface shadow-sm focus:bg-surface-container focus:outline-none"
+            [value]="selectedCampaign()"
+            (change)="selectedCampaign.set(campSel.value)"
+          >
+            @for (option of profile().campaigns; track option) {
+              <option [value]="option" [selected]="option === selectedCampaign()">{{ option }}</option>
+            }
+          </select>
+          <span
+            translate="no"
+            class="material-symbols-outlined notranslate pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[16px] text-outline"
+            >expand_more</span
+          >
+        </div>
+        <button
+          type="button"
+          class="flex h-9 items-center gap-1 rounded-lg bg-primary-container px-3.5 text-label-md text-on-primary-container transition-colors hover:bg-primary"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px]">add</span>
+          <span>Assign</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Active task card -->
+    <div
+      class="grid grid-cols-1 items-center gap-space-md rounded-xl bg-surface-lowest p-space-md shadow-inner xl:grid-cols-3"
+    >
+      <div class="flex flex-col gap-1.5 xl:col-span-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="rounded bg-primary/10 px-2 py-0.5 font-data-mono text-label-sm font-semibold text-primary">
+            [{{ profile().task.asn }}]
+          </span>
+          <span class="text-title-md font-semibold text-on-surface">{{ profile().task.title }}</span>
+          <span
+            class="flex items-center gap-1 rounded bg-tertiary-container/30 px-2 py-0.5 text-label-sm font-semibold text-tertiary"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-tertiary"></span>
+            Stage: {{ profile().task.stage }}
+          </span>
+        </div>
+        <div class="flex flex-wrap items-center gap-space-md text-body-sm text-on-surface-variant">
+          <span>Due: <strong>{{ profile().task.due }}</strong></span>
+          <span>Assignee: <strong>{{ profile().task.assignee }}</strong></span>
+          <span class="flex items-center gap-1 font-data-mono text-label-sm text-tertiary">
+            <span translate="no" class="material-symbols-outlined notranslate text-[14px]">sync</span>
+            Asana Live Hook Active
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-start gap-2 xl:justify-end">
+        <button
+          type="button"
+          class="flex items-center gap-1 rounded-lg bg-surface-container px-3 py-2 text-label-md text-on-surface transition-colors hover:bg-surface-high"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px]">open_in_new</span>
+          <span>Open in Asana</span>
+        </button>
+        <button
+          type="button"
+          class="flex items-center gap-1 rounded-lg bg-tertiary-container/20 px-3.5 py-2 text-label-md text-tertiary transition-colors hover:bg-tertiary hover:text-on-tertiary"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px]">check</span>
+          <span>Approve Concept</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

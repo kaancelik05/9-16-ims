@@ -1,0 +1,535 @@
+<div class="flex w-full flex-col gap-space-lg">
+  <!-- ── Breadcrumb & header ────────────────────────────────────── -->
+  <div class="flex flex-col gap-space-sm">
+    <div class="flex flex-wrap items-center justify-between gap-space-sm">
+      <nav class="flex items-center gap-2 text-body-sm text-outline">
+        <span class="cursor-pointer transition-colors hover:text-on-surface">Campaign Management</span>
+        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+        <span class="cursor-pointer transition-colors hover:text-on-surface">Nike Summer Launch 2026</span>
+        <span translate="no" class="material-symbols-outlined notranslate text-[14px]">chevron_right</span>
+        <span class="font-medium text-primary">Content Performance &amp; Analytics</span>
+      </nav>
+    </div>
+
+    <div class="flex flex-col gap-space-md pt-space-xs xl:flex-row xl:items-center xl:justify-between">
+      <div>
+        <h1 class="text-headline-lg font-bold tracking-tight text-on-surface">
+          Campaign Content Performance &amp; Analytics
+        </h1>
+        <p class="mt-0.5 text-body-md text-on-surface-variant">
+          Live 9:16 deliverable performance and benchmarks.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button
+          type="button"
+          class="flex items-center gap-1.5 rounded-lg bg-primary-container px-3.5 py-2 text-label-md text-on-primary-container shadow-md transition-all hover:bg-primary hover:text-on-primary"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[18px]">download</span>
+          <span>Export PDF Report</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Operational filter toolbar ─────────────────────────────── -->
+  <div
+    class="flex flex-col justify-between gap-space-md rounded-xl bg-surface-low p-space-md shadow-md lg:flex-row lg:items-center"
+  >
+    <div class="flex flex-wrap items-center gap-space-md">
+      <!-- Campaign scope (driven by the global topbar selector) -->
+      <div
+        class="flex items-center gap-2.5 rounded-lg bg-surface-lowest px-3 py-1.5 shadow-sm"
+        title="Change the campaign from the topbar selector"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-primary">verified</span>
+        <div class="flex flex-col text-left">
+          <span class="max-w-[180px] truncate text-body-sm font-semibold leading-tight text-on-surface">
+            {{ campaignContext.selected()?.name ?? 'All Campaigns' }}
+          </span>
+          <span class="text-label-sm text-tertiary">
+            {{ kpi().assetCount }} assets in scope
+          </span>
+        </div>
+      </div>
+
+      <!-- Date range -->
+      <label
+        class="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-lowest px-3 py-2 text-body-sm text-on-surface shadow-sm transition-colors hover:bg-surface-container"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[18px] text-outline">calendar_today</span>
+        <select
+          [value]="rangeDays()"
+          (change)="setRange($any($event.target).value)"
+          class="cursor-pointer bg-transparent font-medium text-on-surface focus:outline-none"
+          title="Captured-at lookback window"
+        >
+          <option value="0">All Time</option>
+          <option value="7">Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+        </select>
+      </label>
+    </div>
+
+    <!-- Deliverable format pills -->
+    <div class="flex flex-wrap items-center gap-1.5">
+      @for (pill of formatPills(); track pill.key) {
+        <button
+          type="button"
+          (click)="activeFormat.set(pill.key)"
+          class="rounded-full px-3 py-1.5 text-label-sm transition-all"
+          [class]="
+            activeFormat() === pill.key
+              ? 'bg-primary-container font-semibold text-on-primary-container'
+              : 'bg-surface-lowest font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+          "
+        >
+          {{ pill.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── KPI row (5 executive cards) ────────────────────────────── -->
+  <div class="grid grid-cols-1 gap-space-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <!-- Budget pacing -->
+    <div
+      class="group relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-low p-space-lg shadow-md transition-all hover:bg-surface-container"
+    >
+      <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">Budget Pacing</span>
+      <div class="my-space-sm">
+        <div class="flex items-baseline gap-1.5">
+          <span class="text-headline-lg font-bold text-on-surface">{{ kpi().spent }}</span>
+          <span class="text-body-sm text-outline">/ {{ kpi().budget }}</span>
+        </div>
+        <div class="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-highest">
+          <div class="h-full rounded-full bg-primary-container" [style.width.%]="kpi().pct"></div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between pt-space-xs text-label-sm text-outline">
+        <span></span>
+        <span class="font-data-mono text-data-mono">{{ kpi().pct }}% Spent</span>
+      </div>
+    </div>
+
+    <!-- Total reach -->
+    <div
+      class="group relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-low p-space-lg shadow-md transition-all hover:bg-surface-container"
+    >
+      <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">Total Reach</span>
+      <div class="my-space-sm flex items-end justify-between">
+        <div>
+          <span class="text-headline-lg font-bold text-on-surface">{{ kpi().reach }}</span>
+          <p class="mt-1 flex items-center gap-0.5 text-body-sm text-tertiary">
+            <span translate="no" class="material-symbols-outlined notranslate text-[16px]">arrow_upward</span>
+            {{ kpi().impressions }} impressions
+          </p>
+        </div>
+        <svg class="h-8 w-16 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 64 32">
+          <path d="M0 26 Q16 28 24 16 T48 8 T64 4" stroke-linecap="round"></path>
+        </svg>
+      </div>
+      <span class="text-label-sm text-outline">94.2% verified unique audience</span>
+    </div>
+
+    <!-- Impressions -->
+    <div
+      class="group relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-low p-space-lg shadow-md transition-all hover:bg-surface-container"
+    >
+      <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">Impressions</span>
+      <div class="my-space-sm flex items-end justify-between">
+        <div>
+          <span class="text-headline-lg font-bold text-on-surface">{{ kpi().impressions }}</span>
+          <p class="mt-1 text-body-sm text-on-surface-variant">
+            VCR Hold: <span class="font-semibold text-primary">{{ kpi().vcr }}</span>
+          </p>
+        </div>
+        <svg class="h-8 w-16 text-tertiary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 64 32">
+          <path d="M0 24 Q18 20 30 14 T52 10 T64 2" stroke-linecap="round"></path>
+        </svg>
+      </div>
+      <span class="text-label-sm text-outline">2.4M organic re-shares</span>
+    </div>
+
+    <!-- Engagement rate -->
+    <div
+      class="group relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-low p-space-lg shadow-md transition-all hover:bg-surface-container"
+    >
+      <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">Engagement Rate</span>
+      <div class="my-space-sm">
+        <span class="text-headline-lg font-bold text-primary">{{ kpi().er }}</span>
+        <p class="mt-1 text-body-sm text-outline">
+          Par: 2.80% • <span class="font-medium text-tertiary">{{ kpi().alpha }} Alpha</span>
+        </p>
+      </div>
+      <div class="flex items-center gap-1.5 text-label-sm text-outline">
+        <span class="h-1.5 w-1.5 rounded-full bg-tertiary"></span>
+        <span>Top decile vertical retention</span>
+      </div>
+    </div>
+
+    <!-- ROI & EMV -->
+    <div
+      class="group relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-low p-space-lg shadow-md transition-all hover:bg-surface-container"
+    >
+      <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">ROI &amp; Earned Media</span>
+      <div class="my-space-sm">
+        <span class="text-headline-lg font-bold text-on-surface">{{ kpi().emv }}</span>
+        <p class="mt-1 text-body-sm text-on-surface-variant">Total Generated EMV</p>
+      </div>
+      <span class="font-data-mono text-label-sm text-outline">{{ kpi().cpe }} CPE benchmark applied</span>
+    </div>
+  </div>
+
+  <!-- ── Mid bento: velocity + creative highlights ──────────────── -->
+  <div class="grid grid-cols-1 gap-space-md lg:grid-cols-12">
+    <!-- Platform velocity -->
+    <div class="flex flex-col justify-between rounded-xl bg-surface-low p-space-lg shadow-md lg:col-span-7">
+      <div>
+        <div class="mb-space-md flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-primary">multiline_chart</span>
+            <h2 class="text-title-md font-bold text-on-surface">Platform Performance Velocity</h2>
+          </div>
+          <span class="font-data-mono text-label-sm text-outline">{{ kpi().assetCount }} Active Deliverables</span>
+        </div>
+
+        <div class="space-y-space-md">
+          @for (p of platforms(); track p.name) {
+            <div class="flex flex-col gap-1.5">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-body-sm">
+                <div class="flex items-center gap-2">
+                  @if (p.brand) {
+                    <app-brand-logo [platform]="p.brand" [size]="16" />
+                  } @else {
+                    <span class="h-2.5 w-2.5 rounded-full" [class]="p.dot"></span>
+                  }
+                  <span class="font-semibold text-on-surface">{{ p.name }}</span>
+                </div>
+                <div class="flex items-center gap-3 font-data-mono text-data-mono text-label-sm">
+                  <span [class]="p.erBold ? 'font-bold text-tertiary' : 'text-on-surface'">{{ p.er }}</span>
+                  <span class="font-normal text-outline">|</span>
+                  <span [class]="p.erBold ? 'font-semibold text-on-surface' : 'font-semibold text-primary'">
+                    {{ p.emv }}
+                  </span>
+                </div>
+              </div>
+              <div class="h-2 w-full overflow-hidden rounded-full bg-surface-highest">
+                <div class="h-full rounded-full" [class]="p.bar" [style.width.%]="p.share"></div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="mt-space-md flex flex-wrap items-center justify-between gap-2 pt-space-md text-label-sm text-outline">
+        <span>Highest Viral Index: TikTok 9:16 Algorithm Stack</span>
+        <span class="flex items-center gap-1 font-semibold text-tertiary">
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px]">trending_up</span>
+          +34% Retention Rate
+        </span>
+      </div>
+    </div>
+
+    <!-- Creative highlights -->
+    <div class="flex flex-col justify-between rounded-xl bg-surface-low p-space-lg shadow-md lg:col-span-5">
+      <div>
+        <div class="mb-space-md flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span translate="no" class="material-symbols-outlined notranslate text-[20px] text-tertiary">auto_awesome</span>
+            <h2 class="text-title-md font-bold text-on-surface">Creative Highlights &amp; Alerts</h2>
+          </div>
+          <span class="rounded bg-surface-highest px-2 py-0.5 text-label-sm font-semibold text-tertiary">AI Insights</span>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          @for (h of highlights; track h.label) {
+            <div class="flex items-start gap-3 rounded-lg bg-surface-lowest p-3 shadow-sm">
+              <div class="mt-0.5 rounded p-2" [class]="h.iconCls">
+                <span translate="no" class="material-symbols-outlined notranslate text-[18px]">{{ h.icon }}</span>
+              </div>
+              <div class="min-w-0">
+                <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">{{ h.label }}</span>
+                <p class="mt-0.5 text-body-md font-semibold text-on-surface">{{ h.headline }}</p>
+                <p class="text-body-sm text-on-surface-variant">{{ h.detail }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="mt-space-md flex flex-wrap items-center justify-between gap-2 pt-space-md text-label-sm text-outline">
+        <span>Audited by 9:16 Media Engine</span>
+        <span class="flex cursor-pointer items-center gap-0.5 text-primary hover:underline">
+          View Creative Breakdown
+          <span translate="no" class="material-symbols-outlined notranslate text-[14px]">arrow_forward</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Asset telemetry table ──────────────────────────────────── -->
+  <div class="flex flex-col overflow-hidden rounded-xl bg-surface-low shadow-lg">
+    <!-- Table header controls -->
+    <div class="flex flex-col justify-between gap-space-md bg-surface-container p-space-md md:flex-row md:items-center">
+      <div class="relative w-full max-w-sm">
+        <span
+          translate="no"
+          class="material-symbols-outlined notranslate absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+          >search</span
+        >
+        <input
+          #tq
+          type="text"
+          [value]="tableSearch()"
+          (input)="tableSearch.set(tq.value)"
+          class="h-9 w-full rounded-lg bg-surface-lowest pl-9 pr-4 text-body-sm text-on-surface shadow-inner transition-all placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary"
+          placeholder="Filter by creator, title, or task ID..."
+        />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-space-sm">
+        <div
+          class="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-lowest px-3 py-1.5 text-body-sm text-on-surface shadow-sm transition-colors hover:bg-surface-high"
+        >
+          <span class="text-label-sm text-outline">Sort by:</span>
+          <span class="font-semibold text-primary">Highest Engagement Rate</span>
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-outline">arrow_drop_down</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="w-full overflow-x-auto">
+      <table class="w-full border-collapse text-left">
+        <thead>
+          <tr class="bg-surface-high/60 text-label-sm uppercase tracking-wider text-outline">
+            <th class="px-4 py-3 font-semibold">Asset &amp; Format</th>
+            <th class="px-4 py-3 font-semibold">Creator</th>
+            <th class="px-4 py-3 font-semibold">Platform &amp; Published</th>
+            <th class="px-4 py-3 text-right font-semibold">Views / Impr</th>
+            <th class="px-4 py-3 text-right font-semibold">Likes &amp; Saves</th>
+            <th class="px-4 py-3 text-right font-semibold">Comments</th>
+            <th class="px-4 py-3 text-right font-semibold">Shares &amp; Swipes</th>
+            <th class="px-4 py-3 text-center font-semibold">ER Rate</th>
+            <th class="px-4 py-3 text-right font-semibold">CPE &amp; EMV</th>
+            <th class="px-4 py-3 text-center font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-surface-highest/30 text-body-sm text-on-surface">
+          @for (a of filteredAssets(); track a.id) {
+            <tr class="group transition-colors hover:bg-surface-high/40">
+              <!-- Asset -->
+              <td class="min-w-[260px] px-4 py-3.5">
+                <div class="flex items-center gap-3">
+                  <div class="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-md bg-surface-container shadow">
+                    @if (failedThumbs().has(a.id)) {
+                      <div class="grid h-full w-full place-items-center bg-gradient-to-br from-surface-high to-surface-highest text-outline">
+                        <span translate="no" class="material-symbols-outlined notranslate text-[18px]">movie</span>
+                      </div>
+                    } @else {
+                      <img
+                        [src]="a.thumb"
+                        [alt]="a.title"
+                        (error)="onThumbError(a.id)"
+                        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    }
+                    <span class="absolute bottom-1 right-1 rounded bg-black/70 px-1 font-data-mono text-[9px] text-white">
+                      {{ a.duration }}
+                    </span>
+                  </div>
+                  <div class="flex min-w-0 flex-col gap-1">
+                    <span class="truncate font-semibold text-on-surface transition-colors group-hover:text-primary">
+                      {{ a.title }}
+                    </span>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <span class="rounded px-1.5 py-0.5 font-data-mono text-[10px] font-semibold" [class]="a.formatCls">
+                        {{ a.formatLabel }}
+                      </span>
+                      <span class="rounded bg-surface-highest px-1.5 py-0.5 font-data-mono text-[10px] text-outline">
+                        {{ a.asn }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Creator -->
+              <td class="whitespace-nowrap px-4 py-3.5">
+                <div class="flex items-center gap-2.5">
+                  @if (failedThumbs().has(a.id + '-av')) {
+                    <div class="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-primary-container to-[#3b82f6] text-[10px] font-bold text-white">
+                      {{ initials(a.creator.name) }}
+                    </div>
+                  } @else {
+                    <img
+                      [src]="a.creator.avatar"
+                      [alt]="a.creator.name"
+                      (error)="onThumbError(a.id + '-av')"
+                      class="h-8 w-8 rounded-full object-cover"
+                    />
+                  }
+                  <div class="flex flex-col">
+                    <span class="font-semibold text-on-surface">{{ a.creator.name }}</span>
+                    <span class="font-data-mono text-[11px] text-outline">{{ a.creator.handle }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Platform -->
+              <td class="whitespace-nowrap px-4 py-3.5">
+                <div class="flex flex-col">
+                  <div class="flex items-center gap-1 font-medium text-on-surface">
+                    <span class="h-2 w-2 rounded-full" [class]="a.platform.dot"></span>
+                    <span>{{ a.platform.name }}</span>
+                  </div>
+                  <span class="font-data-mono text-[11px] text-outline">{{ a.published }}</span>
+                </div>
+              </td>
+
+              <!-- Views -->
+              <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                <div class="flex flex-col">
+                  <span class="font-data-mono font-semibold text-on-surface">{{ a.views }}</span>
+                  <span class="font-data-mono text-[11px] text-outline">{{ a.impressions }}</span>
+                </div>
+              </td>
+
+              <!-- Likes -->
+              <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                <div class="flex flex-col">
+                  <span class="font-data-mono font-semibold text-on-surface">{{ a.likes }}</span>
+                  <span class="font-data-mono text-[11px] text-outline">{{ a.saves }}</span>
+                </div>
+              </td>
+
+              <!-- Comments -->
+              <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                <div class="flex flex-col">
+                  <span class="font-data-mono font-semibold text-on-surface">{{ a.comments }}</span>
+                  <span class="font-data-mono text-[11px] text-tertiary">{{ a.sentiment }}</span>
+                </div>
+              </td>
+
+              <!-- Shares -->
+              <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                <div class="flex flex-col">
+                  <span class="font-data-mono font-semibold text-on-surface">{{ a.shares }}</span>
+                  <span class="font-data-mono text-[11px] text-primary">{{ a.taps }}</span>
+                </div>
+              </td>
+
+              <!-- ER -->
+              <td class="whitespace-nowrap px-4 py-3.5 text-center">
+                <span class="rounded-full px-2.5 py-1 font-data-mono text-label-sm font-bold" [class]="a.erCls">
+                  {{ a.er }}
+                </span>
+              </td>
+
+              <!-- CPE & EMV -->
+              <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                <div class="flex flex-col">
+                  <span class="font-data-mono font-semibold text-on-surface">{{ a.emv }}</span>
+                  <span class="font-data-mono text-[11px] text-outline">{{ a.cpe }}</span>
+                </div>
+              </td>
+
+              <!-- Actions -->
+              <td class="whitespace-nowrap px-4 py-3.5 text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    title="Deep Link Post"
+                    class="rounded p-1 text-outline transition-colors hover:bg-surface-highest hover:text-primary"
+                  >
+                    <span translate="no" class="material-symbols-outlined notranslate text-[18px]">open_in_new</span>
+                  </button>
+                  <button
+                    type="button"
+                    title="Asana Synced (200 OK)"
+                    class="rounded p-1 text-outline transition-colors hover:bg-surface-highest hover:text-tertiary"
+                  >
+                    <span translate="no" class="material-symbols-outlined notranslate text-[18px]">task_alt</span>
+                  </button>
+                  <button
+                    type="button"
+                    title="Detailed Telemetry"
+                    class="rounded p-1 text-outline transition-colors hover:bg-surface-highest hover:text-on-surface"
+                  >
+                    <span translate="no" class="material-symbols-outlined notranslate text-[18px]">analytics</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="10" class="px-4 py-10 text-center text-body-sm text-outline">
+                No assets match the current filters.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table footer -->
+    <div class="flex flex-col items-center justify-between gap-space-sm bg-surface-low p-space-md sm:flex-row">
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          class="flex items-center gap-1 rounded-lg bg-surface-high px-3 py-1.5 text-label-sm font-semibold text-primary shadow-sm transition-all hover:bg-surface-bright"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[16px]">sync</span>
+          <span>Re-calculate EMV</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-space-md">
+        <span class="font-data-mono text-label-sm text-outline">
+          Showing 1–{{ filteredAssets().length }} of 24 Assets
+        </span>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-highest text-outline transition-colors hover:text-on-surface"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[18px]">chevron_left</span>
+          </button>
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-data-mono text-label-sm font-bold text-on-primary shadow"
+          >
+            1
+          </button>
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container font-data-mono text-label-sm text-outline transition-colors hover:bg-surface-high hover:text-on-surface"
+          >
+            2
+          </button>
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container font-data-mono text-label-sm text-outline transition-colors hover:bg-surface-high hover:text-on-surface"
+          >
+            3
+          </button>
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container font-data-mono text-label-sm text-outline transition-colors hover:bg-surface-high hover:text-on-surface"
+          >
+            4
+          </button>
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-highest text-outline transition-colors hover:text-on-surface"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

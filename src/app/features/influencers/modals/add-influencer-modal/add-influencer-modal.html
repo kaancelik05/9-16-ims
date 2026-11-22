@@ -1,0 +1,384 @@
+@if (open()) {
+  <div
+    class="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm"
+    (click)="onBackdrop($event)"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Add Influencer to Roster"
+  >
+    <div
+      class="relative my-8 w-full max-w-2xl overflow-hidden rounded-xl border border-outline-variant/40 bg-surface-low text-on-surface shadow-2xl"
+    >
+      <!-- ── Header ─────────────────────────────────────────────── -->
+      <div
+        class="flex items-start justify-between border-b border-outline-variant/20 bg-surface-container p-space-md"
+      >
+        <div class="flex items-start gap-space-sm">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-container/20 text-primary"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[24px]">person_add</span>
+          </div>
+          <div class="flex flex-col">
+            <div class="flex items-center gap-2">
+              <h2 class="text-headline-sm font-bold tracking-tight text-on-surface">
+                Add Influencer to Roster
+              </h2>
+              <span
+                class="flex items-center gap-1 rounded-full bg-tertiary/10 px-2 py-0.5 font-data-mono text-[11px] font-semibold text-tertiary"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-tertiary"></span>
+                AI Ready
+              </span>
+            </div>
+            <p class="pt-0.5 text-body-sm text-on-surface-variant">
+              Register a creator and link their social handles.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="close()"
+          title="Close modal"
+          class="rounded-lg p-1.5 text-outline transition-colors hover:bg-surface-high hover:text-on-surface"
+        >
+          <span translate="no" class="material-symbols-outlined notranslate text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- ── Body ───────────────────────────────────────────────── -->
+      <div class="flex max-h-[calc(85vh-140px)] flex-col gap-space-md overflow-y-auto p-space-md">
+        <!-- Section 1: Identity -->
+        <div class="flex flex-col gap-space-xs">
+          <div
+            class="flex items-center gap-1.5 text-label-sm font-semibold uppercase tracking-wider text-primary"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[15px]">badge</span>
+            <span>1. Creator Identity &amp; Representation</span>
+          </div>
+          <div class="grid grid-cols-1 gap-space-sm pt-1 md:grid-cols-2">
+            <!-- Profile photo picker -->
+            <div class="flex items-center gap-3 rounded-lg border border-outline-variant/30 bg-surface-lowest p-2.5 md:col-span-2">
+              @if (avatarPreview(); as preview) {
+                <img [src]="preview" alt="Avatar preview" class="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-primary-container/40" />
+              } @else {
+                <span class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-surface-high text-outline">
+                  <span translate="no" class="material-symbols-outlined notranslate text-[24px]">account_circle</span>
+                </span>
+              }
+              <div class="flex min-w-0 flex-1 flex-col gap-1">
+                <span class="text-label-sm font-medium text-on-surface">Profile Photo</span>
+                <span class="truncate text-[11px] text-outline">
+                  {{ avatarFile()?.name ?? 'JPG / PNG — shown on the roster card and profile' }}
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                class="hidden"
+                #avatarInput
+                (change)="onAvatarSelected($event); avatarInput.value = ''"
+              />
+              @if (avatarFile()) {
+                <button
+                  type="button"
+                  (click)="clearAvatar()"
+                  title="Remove photo"
+                  class="rounded-lg p-1.5 text-outline transition-colors hover:bg-surface-container hover:text-error"
+                >
+                  <span translate="no" class="material-symbols-outlined notranslate text-[18px]">close</span>
+                </button>
+              }
+              <button
+                type="button"
+                (click)="avatarInput.click()"
+                class="flex shrink-0 items-center gap-1.5 rounded-lg bg-surface-high px-3 py-2 text-label-sm font-semibold text-on-surface shadow-sm transition-all hover:bg-surface-bright"
+              >
+                <span translate="no" class="material-symbols-outlined notranslate text-[16px] text-primary">upload</span>
+                Upload
+              </button>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="ai-name" class="text-label-sm text-outline">
+                Full Name <span class="text-error">*</span>
+              </label>
+              <input
+                id="ai-name"
+                type="text"
+                class="field-modal"
+                placeholder="e.g. Alex Rivers"
+                [value]="name()"
+                (input)="name.set(nv.value)"
+                #nv
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="ai-location" class="text-label-sm text-outline">Creator Location / Region</label>
+              <input
+                id="ai-location"
+                type="text"
+                class="field-modal"
+                placeholder="e.g. Los Angeles, CA • North America"
+                [value]="location()"
+                (input)="location.set(lv.value)"
+                #lv
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="ai-email" class="text-label-sm text-outline">Primary Email &amp; Contact</label>
+              <input
+                id="ai-email"
+                type="email"
+                class="field-modal"
+                placeholder="contact@creator.agency"
+                [value]="email()"
+                (input)="email.set(ev.value)"
+                #ev
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="ai-niche" class="text-label-sm text-outline">Primary Niche</label>
+              <div class="relative">
+                <select id="ai-niche" #ns class="field-modal cursor-pointer appearance-none pr-8" [value]="niche()" (change)="niche.set(ns.value)">
+                  @for (option of nicheOptions; track option) {
+                    <option [value]="option" [selected]="option === niche()">{{ option }}</option>
+                  }
+                </select>
+                <span
+                  translate="no"
+                  class="material-symbols-outlined notranslate pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+                  >expand_more</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Social handles -->
+        <div class="flex flex-col gap-space-xs border-t border-outline-variant/20 pt-1">
+          <div class="flex items-center justify-between">
+            <div
+              class="flex items-center gap-1.5 text-label-sm font-semibold uppercase tracking-wider text-primary"
+            >
+              <span translate="no" class="material-symbols-outlined notranslate text-[15px]">share</span>
+              <span>2. Connected Social Handles &amp; Telemetry</span>
+            </div>
+            <button
+              type="button"
+              (click)="autoFetch()"
+              class="flex items-center gap-1 rounded bg-primary-container/20 px-2 py-1 text-[11px] font-semibold text-primary transition-all hover:bg-primary-container hover:text-on-primary-container"
+              [disabled]="fetching()"
+            >
+              <span
+                translate="no"
+                class="material-symbols-outlined notranslate text-[14px]"
+                [class.animate-spin]="fetching()"
+                >autorenew</span
+              >
+              <span>{{ fetching() ? 'Fetching…' : 'Auto-Fetch Public Metrics' }}</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 gap-space-sm pt-1 md:grid-cols-2">
+            <div class="flex flex-col gap-1">
+              <label for="ai-ig" class="flex items-center gap-1 text-label-sm text-outline">
+                <span translate="no" class="material-symbols-outlined notranslate text-[14px] text-primary">photo_camera</span>
+                Instagram Handle
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 font-data-mono text-body-sm text-outline">&#64;</span>
+                <input
+                  id="ai-ig"
+                  type="text"
+                  class="field-modal pl-7"
+                  placeholder="instagram.handle"
+                  [value]="instagram()"
+                  (input)="instagram.set(ig.value)"
+                  #ig
+                />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="ai-tt" class="flex items-center gap-1 text-label-sm text-outline">
+                <span translate="no" class="material-symbols-outlined notranslate text-[14px] text-primary">music_note</span>
+                TikTok Handle
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 font-data-mono text-body-sm text-outline">&#64;</span>
+                <input
+                  id="ai-tt"
+                  type="text"
+                  class="field-modal pl-7"
+                  placeholder="tiktok.handle"
+                  [value]="tiktok()"
+                  (input)="tiktok.set(tt.value)"
+                  #tt
+                />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="ai-yt" class="flex items-center gap-1 text-label-sm text-outline">
+                <span translate="no" class="material-symbols-outlined notranslate text-[14px] text-primary">smart_display</span>
+                YouTube Channel URL / Handle
+              </label>
+              <input
+                id="ai-yt"
+                type="text"
+                class="field-modal"
+                placeholder="youtube.com/@AlexRiversTech"
+                [value]="youtube()"
+                (input)="youtube.set(yv.value)"
+                #yv
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="ai-sc" class="flex items-center gap-1 text-label-sm text-outline">
+                <span translate="no" class="material-symbols-outlined notranslate text-[14px] text-outline">chat</span>
+                Snapchat / Twitch (Optional)
+              </label>
+              <input
+                id="ai-sc"
+                type="text"
+                class="field-modal"
+                placeholder="@snap_or_twitch"
+                [value]="snapchat()"
+                (input)="snapchat.set(sv.value)"
+                #sv
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Workflow & Asana -->
+        <div class="flex flex-col gap-space-xs border-t border-outline-variant/20 pt-1">
+          <div
+            class="flex items-center gap-1.5 text-label-sm font-semibold uppercase tracking-wider text-primary"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[15px]">sync_alt</span>
+            <span>3. Workflow, Campaign &amp; Asana Integration</span>
+          </div>
+          <div class="grid grid-cols-1 gap-space-sm pt-1 md:grid-cols-2">
+            <div class="flex flex-col gap-1">
+              <label for="ai-tier" class="text-label-sm text-outline">Roster Tier</label>
+              <div class="relative">
+                <select id="ai-tier" #ts class="field-modal cursor-pointer appearance-none pr-8" [value]="tier()" (change)="tier.set(ts.value)">
+                  @for (option of tierOptions; track option) {
+                    <option [value]="option" [selected]="option === tier()">{{ option }}</option>
+                  }
+                </select>
+                <span
+                  translate="no"
+                  class="material-symbols-outlined notranslate pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+                  >expand_more</span
+                >
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="ai-campaign" class="text-label-sm text-outline">Campaign Assignment</label>
+              <div class="relative">
+                <select
+                  id="ai-campaign"
+                  #cs
+                  class="field-modal cursor-pointer appearance-none pr-8"
+                  [value]="campaign()"
+                  (change)="campaign.set(cs.value)"
+                >
+                  @for (option of campaignOptions; track option) {
+                    <option [value]="option" [selected]="option === campaign()">{{ option }}</option>
+                  }
+                </select>
+                <span
+                  translate="no"
+                  class="material-symbols-outlined notranslate pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+                  >expand_more</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Instant AI audit toggle -->
+          <div
+            class="mt-2 flex items-center justify-between rounded-lg border border-outline-variant/20 bg-surface-container p-3"
+          >
+            <div class="flex items-start gap-2.5">
+              <div
+                class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-tertiary/10 text-tertiary"
+              >
+                <span translate="no" class="material-symbols-outlined notranslate text-[18px]">verified_user</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-label-md font-semibold text-on-surface">Instant AI Brand Safety Audit</span>
+                <span class="text-body-sm text-outline">
+                  Execute automated copyright risk, sentiment check, and toxicity scan on registration.
+                </span>
+              </div>
+            </div>
+            <label class="relative inline-flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                class="peer sr-only"
+                [checked]="auditOn()"
+                (change)="auditOn.set(!auditOn())"
+              />
+              <div
+                class="after:absolute after:top-[2px] after:left-[2px] after:h-4 after:w-4 after:rounded-full after:bg-on-surface after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white h-5 w-9 rounded-full bg-surface-high peer peer-focus:outline-none peer-checked:bg-tertiary"
+              ></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Section 4: Agency notes (internal) -->
+        <div class="flex flex-col gap-space-xs">
+          <div
+            class="flex items-center gap-1.5 text-label-sm font-semibold uppercase tracking-wider text-primary"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[15px]">sticky_note_2</span>
+            <span>4. Agency Notes</span>
+          </div>
+          <div class="flex flex-col gap-1 pt-1">
+            <label for="ai-notes" class="text-label-sm text-outline">
+              Internal note from the registering agent — visible on the creator profile
+            </label>
+            <textarea
+              id="ai-notes"
+              rows="3"
+              class="field-modal resize-y"
+              placeholder="e.g. Referred by Marcus; strong UGC portfolio; rate negotiable for bundle deals…"
+              [value]="internalNotes()"
+              (input)="internalNotes.set(notesV.value)"
+              #notesV
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Footer ─────────────────────────────────────────────── -->
+      <div
+        class="flex items-center justify-between border-t border-outline-variant/20 bg-surface-container p-space-md"
+      >
+        <div class="flex items-center gap-2 text-label-sm text-outline">
+          <span class="h-2 w-2 animate-pulse rounded-full bg-tertiary"></span>
+          <span>Asana Sync: Active Webhook Hooked</span>
+        </div>
+        <div class="flex items-center gap-space-sm">
+          <button
+            type="button"
+            (click)="close()"
+            class="h-9 rounded-lg bg-surface-high px-4 text-label-md font-medium text-on-surface transition-colors hover:bg-surface-bright"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            (click)="register()"
+            [disabled]="!canRegister()"
+            class="flex h-9 items-center gap-1.5 rounded-lg bg-primary-container px-4 text-label-md font-semibold text-on-primary-container shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition-all hover:bg-primary hover:text-on-primary disabled:pointer-events-none disabled:opacity-40"
+          >
+            <span translate="no" class="material-symbols-outlined notranslate text-[18px]">person_add</span>
+            <span>Register Influencer</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -42,3 +42,14 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Local secrets — never commit (Supabase secret key, Asana PAT, CLI access token)
+.env
+.env.*
+
+# Supabase CLI local state
+supabase/.temp/
+
+
+# ZCode IDE state
+.zcode/

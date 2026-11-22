@@ -1,59 +1,76 @@
-# Ims
+# 9-16 IMP · Influencer Management Platform
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.24.
+Enterprise B2B SaaS platform for short-form **9:16 vertical video** influencer
+marketing — creator discovery, on-demand AI brand safety audits, bidirectional
+**Asana** synchronization, cross-platform campaign analytics and tokenized
+creator consent.
 
-## Development server
+| Layer    | Tech                                                                 |
+| -------- | -------------------------------------------------------------------- |
+| Frontend | Angular 21 (zoneless, signals, standalone) + Tailwind CSS v4         |
+| Backend  | Supabase — Postgres, Auth, Realtime, Storage, Edge Functions (Deno)  |
+| Sync     | Asana REST + Webhooks (PAT kept server-side in Edge Function secrets) |
 
-To start a local development server, run:
+Full architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
-```bash
-ng serve
-```
+## Modules
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+| # | Module                          | Route                     |
+| - | ------------------------------- | ------------------------- |
+| 1 | Influencer Discovery & Directory | `/influencers`            |
+| 2 | Add Influencer Modal            | `/influencers` (modal)    |
+| 3 | Profile & AI Safety Audit       | `/influencers/:id`        |
+| 4 | Campaign Workflow · Asana Sync  | `/campaigns`              |
+| 5 | Campaign Analytics              | `/analytics`              |
+| 6 | Creator Consent Portal          | `/consent?token=…`        |
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+## Getting started
 
 ```bash
-ng build
+npm install
+npm start          # → http://localhost:4200
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Configure Supabase credentials in
+`src/environments/environment.development.ts` (local stack) and
+`src/environments/environment.ts` (production):
 
-## Running unit tests
+```ts
+export const environment = {
+  production: false,
+  supabase: {
+    url: 'http://127.0.0.1:54321',
+    anonKey: 'YOUR-SUPABASE-ANON-KEY',
+  },
+};
+```
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Database (local Supabase stack)
 
 ```bash
-ng test
+supabase link --project-ref <ref>        # or: supabase init + supabase start
+supabase db reset                        # applies migrations + seed.sql
+supabase functions serve                 # asana-proxy · asana-webhook · consent-api
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+### Asana secrets
 
 ```bash
-ng e2e
+supabase secrets set ASANA_ACCESS_TOKEN=<personal_access_token>
+supabase secrets set APP_URL=https://your-app.example.com
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Scripts
 
-## Additional Resources
+| Command         | Purpose                            |
+| --------------- | ---------------------------------- |
+| `npm start`     | Dev server (`localhost:4200`)      |
+| `npm run build` | Production build (`dist/`)         |
+| `npm test`      | Unit tests (Vitest)                |
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Security notes
+
+- Row Level Security on every table (`supabase/migrations/0002_rls.sql`)
+- Asana PAT never reaches the browser — only Edge Functions
+- Creator consents are read-only by schema (zero-posting guarantee)
+- Consent links are single-use, expiring tokens

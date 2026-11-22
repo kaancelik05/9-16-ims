@@ -1,0 +1,241 @@
+<!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+<!-- Mobile: off-canvas drawer (translate + overlay); lg+: persistent rail,
+     collapsible to an icon rail. Clicks don't bubble to the close-listener. -->
+<aside
+  (click)="$event.stopPropagation()"
+  class="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col justify-between bg-surface-low shadow-[0_1px_8px_rgba(0,0,0,0.45)] transition-all duration-200 lg:translate-x-0"
+  [class.translate-x-0]="sidebarOpen()"
+  [class.-translate-x-full]="!sidebarOpen()"
+  [class.lg:w-64]="!sidebarCollapsed()"
+  [class.lg:w-20]="sidebarCollapsed()"
+>  <div class="flex flex-col">
+    <!-- Brand — logo centered; mobile close floats right -->
+    <div class="relative flex h-16 items-center justify-center px-space-lg">
+      <div class="flex items-center gap-space-sm">
+        <app-logo [width]="28" [height]="21" class="text-on-surface" />
+        <span
+          class="text-headline-sm font-bold tracking-tight text-on-surface"
+          [class.lg:hidden]="sidebarCollapsed()"
+        >
+          IMP
+        </span>
+      </div>
+      <button
+        type="button"
+        (click)="closeSidebar()"
+        aria-label="Close menu"
+        class="absolute right-space-md rounded-lg p-1.5 text-outline transition-colors hover:bg-surface-container hover:text-on-surface lg:hidden"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Primary nav -->
+    <div class="px-space-md py-space-sm">
+      <nav class="flex flex-col gap-1">
+        @for (item of nav; track item.label) {
+          <a
+            [routerLink]="item.route"
+            (click)="closeSidebar()"
+            [title]="item.label"
+            [routerLinkActive]="
+              item.noActive ? [] : 'bg-surface-high text-primary font-bold shadow-[inset_0_0_12px_rgba(77,142,255,0.15)]'
+            "
+            class="group flex items-center justify-between rounded-lg px-space-md py-2.5 text-on-surface-variant transition-all hover:bg-surface-container hover:text-on-surface"
+            [class.lg:justify-center]="sidebarCollapsed()"
+          >
+            <div class="flex items-center gap-space-sm">
+              <span translate="no" class="material-symbols-outlined notranslate text-[20px]">{{ item.icon }}</span>
+              <span class="text-body-md font-medium" [class.lg:hidden]="sidebarCollapsed()">{{ item.label }}</span>
+            </div>
+          </a>
+        }
+      </nav>
+    </div>
+  </div>
+
+  <!-- Sidebar footer: workspace stats (expanded) / status dot (collapsed) -->
+  <div
+    class="flex flex-col gap-space-sm border-t border-outline-variant/20 px-space-md pb-space-md"
+    [class.lg:hidden]="sidebarCollapsed()"
+  >
+    <!-- Inline stat strip — icon + value side by side, compact -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1.5 text-outline">
+        <span translate="no" class="material-symbols-outlined notranslate text-[14px] text-primary">group</span>
+        <span class="text-label-sm font-medium">{{ creatorCount() ?? '—' }}</span>
+        <span class="text-[10px] uppercase tracking-wider">creators</span>
+      </div>
+      <span class="h-3 w-px bg-outline-variant/30"></span>
+      <div class="flex items-center gap-1.5 text-outline">
+        <span translate="no" class="material-symbols-outlined notranslate text-[14px] text-tertiary">campaign</span>
+        <span class="text-label-sm font-medium">{{ campaignContext.campaigns().length || '—' }}</span>
+        <span class="text-[10px] uppercase tracking-wider">campaigns</span>
+      </div>
+    </div>
+  </div>
+  <!-- Edge handle — straddles the sidebar border, vertically centered (lg+). -->
+  <button
+    type="button"
+    (click)="toggleSidebar()"
+    [title]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    aria-label="Toggle sidebar"
+    class="absolute top-1/2 left-full z-10 hidden h-12 w-5 -translate-y-1/2 items-center justify-center rounded-r-lg border border-l-0 border-outline-variant/40 bg-surface-low text-outline shadow-md transition-colors hover:bg-surface-container hover:text-on-surface lg:flex"
+  >
+    <span translate="no" class="material-symbols-outlined notranslate text-[16px]">{{
+      sidebarCollapsed() ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left'
+    }}</span>
+  </button>
+</aside>
+
+<!-- Mobile drawer overlay -->
+@if (sidebarOpen()) {
+  <div
+    class="fixed inset-0 z-[45] bg-black/60 backdrop-blur-sm lg:hidden"
+    (click)="closeSidebar()"
+    aria-hidden="true"
+  ></div>
+}
+
+<!-- ── Main column ──────────────────────────────────────────────────── -->
+<div class="transition-all duration-200" [class.lg:pl-64]="!sidebarCollapsed()" [class.lg:pl-20]="sidebarCollapsed()">
+  <!-- Topbar -->
+  <header
+    class="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between gap-space-sm bg-surface-low/90 px-space-sm shadow-[0_1px_8px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 md:px-space-lg"
+    [class.lg:left-64]="!sidebarCollapsed()"
+    [class.lg:left-20]="sidebarCollapsed()"
+  >
+    <div class="flex min-w-0 max-w-2xl flex-1 items-center gap-space-sm md:gap-space-md">
+      <!-- Mobile menu toggle — stop propagation so the document-level
+           closeMenus() listener doesn't immediately re-close the drawer. -->
+      <button
+        type="button"
+        (click)="sidebarOpen.set(true); $event.stopPropagation()"
+        aria-label="Open menu"
+        class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface lg:hidden"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[22px]">menu</span>
+      </button>
+
+      <!-- Global search -->
+      <div class="relative w-full max-w-md min-w-0">
+        <span
+          translate="no"
+          class="material-symbols-outlined notranslate absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+          >search</span
+        >
+        <input
+          type="text"
+          class="h-9 w-full rounded-lg bg-surface-lowest pl-9 pr-9 text-body-sm text-on-surface transition-all placeholder:text-outline focus:bg-surface-container focus:text-on-surface focus:outline-none sm:pr-12"
+          placeholder="Search…"
+        />
+        <kbd
+          class="absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded bg-surface-container px-1.5 py-0.5 font-data-mono text-label-sm text-outline sm:block"
+          >⌘K</kbd
+        >
+      </div>
+
+      <!-- Global campaign selector — scopes Dashboard / Kanban / Analytics -->
+      <label
+        class="hidden cursor-pointer items-center gap-2 rounded-lg bg-surface-lowest px-space-sm py-1 transition-colors hover:bg-surface-container md:flex"
+        title="Scope data screens by campaign"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[18px] text-primary">bolt</span>
+        <select
+          [value]="campaignContext.selectedId()"
+          (change)="campaignContext.setSelected($any($event.target).value)"
+          class="max-w-[190px] cursor-pointer truncate bg-transparent text-body-sm font-medium text-on-surface focus:outline-none"
+        >
+          <option value="all">All Campaigns</option>
+          @for (c of campaignContext.campaigns(); track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="flex shrink-0 items-center gap-space-sm md:gap-space-md">
+      <!-- Theme toggle -->
+      <button
+        type="button"
+        (click)="theme.toggle()"
+        [title]="theme.light() ? 'Switch to dark mode' : 'Switch to light mode'"
+        [attr.aria-label]="theme.light() ? 'Switch to dark mode' : 'Switch to light mode'"
+        class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate text-[20px]">{{
+          theme.light() ? 'dark_mode' : 'light_mode'
+        }}</span>
+      </button>
+
+      <!-- Profile menu -->
+      <div class="relative" (click)="$event.stopPropagation()">
+        <button
+          type="button"
+          (click)="profileMenuOpen.set(!profileMenuOpen())"
+          [class]="profileMenuOpen() ? 'rounded-lg bg-surface-container' : ''"
+          class="group flex cursor-pointer items-center gap-space-sm rounded-lg pl-space-xs transition-colors hover:bg-surface-container"
+          aria-label="Account menu"
+        >
+          <img [src]="avatarUrl" alt="Profile" class="h-8 w-8 rounded-full object-cover" />
+          <div class="hidden flex-col text-left md:flex">
+            <span class="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+              {{ auth.profile()?.full_name ?? auth.userEmail() ?? 'Agency User' }}
+            </span>
+            <span class="font-label-sm text-label-sm text-outline">{{ roleTitle() }}</span>
+          </div>
+          <span
+            translate="no"
+            class="material-symbols-outlined notranslate text-[18px] text-outline transition-colors group-hover:text-on-surface"
+            >expand_more</span
+          >
+        </button>
+
+        @if (profileMenuOpen()) {
+          <div
+            class="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-outline-variant/40 bg-surface-low p-1.5 shadow-2xl"
+            role="menu"
+          >
+            <div class="flex flex-col gap-0.5 px-2.5 py-2">
+              <span class="truncate text-body-sm font-semibold text-on-surface">
+                {{ auth.profile()?.full_name ?? auth.userEmail() ?? 'Agency User' }}
+              </span>
+              <span class="truncate font-label-sm text-label-sm text-outline">{{ roleTitle() }}</span>
+            </div>
+            <div class="my-1 h-px bg-outline-variant/30"></div>
+            <a
+              routerLink="/settings/profile"
+              (click)="profileMenuOpen.set(false)"
+              class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-body-sm text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
+            >
+              <span translate="no" class="material-symbols-outlined notranslate text-[18px] text-primary">person</span>
+              Profile
+            </a>
+            <a
+              routerLink="/settings"
+              (click)="profileMenuOpen.set(false)"
+              class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-body-sm text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
+            >
+              <span translate="no" class="material-symbols-outlined notranslate text-[18px] text-primary">settings</span>
+              Settings
+            </a>
+            <div class="my-1 h-px bg-outline-variant/30"></div>
+            <button
+              type="button"
+              (click)="signOut()"
+              class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-body-sm text-error transition-colors hover:bg-error/10"
+            >
+              <span translate="no" class="material-symbols-outlined notranslate text-[18px]">logout</span>
+              Sign out
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- Routed content — pt-24 clears the 64px topbar + breathing room -->
+  <main class="min-h-screen w-full bg-surface-lowest px-space-sm pb-space-lg pt-20 md:px-space-lg">
+    <router-outlet />
+  </main>
+</div>
